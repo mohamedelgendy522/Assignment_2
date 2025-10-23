@@ -11,6 +11,8 @@ public:
 	void setMuted(bool shouldMute);
     void play();
     void pause();
+    void end();
+    void start();
     void stop();
     void setGain(float gain);
     void setPosition(float pos);

@@ -5,7 +5,7 @@
 class IconButton : public juce::TextButton  {
 
 public:
-    enum class Type { Play, Pause, Restart, Stop , Mute };
+    enum class Type { Play, Pause, Start, End, Restart, Stop , Mute };
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; }         // getter
@@ -47,6 +47,63 @@ case Type::Pause:
 
     g.fillRect(bounds.getCentreX() - gap / 2 - barWidth, top, barWidth, height);
     g.fillRect(bounds.getCentreX() + gap / 2, top, barWidth, height);
+    break;
+}
+case Type::Start:
+{
+    // |◄ icon
+    juce::Path startIcon;
+
+    float midY = bounds.getCentreY();
+    float leftX = bounds.getX() + bounds.getWidth() * 0.2f;
+    float rightX = bounds.getRight() - bounds.getWidth() * 0.2f;
+
+    // Vertical bar |
+    g.fillRect(
+        leftX + bounds.getWidth() * 0.15f,
+        bounds.getY() + bounds.getHeight() * 0.25f,
+        bounds.getWidth() * 0.06f,
+        bounds.getHeight() * 0.5f
+    );
+
+    // Triangle ◄ 
+    startIcon.addTriangle(
+        rightX - bounds.getWidth() * 0.15f,
+        bounds.getY() + bounds.getHeight() * 0.25f,
+        rightX - bounds.getWidth() * 0.15f,
+        bounds.getY() + bounds.getHeight() * 0.75f,
+        leftX + bounds.getWidth() * 0.22f,
+        midY
+    );
+    g.fillPath(startIcon);
+
+    break;
+}
+
+case Type::End:
+{
+    // ►| icon
+    juce::Path endIcon;
+
+    float midY = bounds.getCentreY();
+    float leftX = bounds.getX() + bounds.getWidth() * 0.2f;
+    float rightX = bounds.getRight() - bounds.getWidth() * 0.2f;
+
+    // Triangle ►
+    endIcon.addTriangle(
+        leftX + bounds.getWidth() * 0.15f,
+        bounds.getY() + bounds.getHeight() * 0.25f,
+        leftX + bounds.getWidth() * 0.15f,
+        bounds.getY() + bounds.getHeight() * 0.75f,
+        rightX - bounds.getWidth() * 0.18f,
+        midY);
+    g.fillPath(endIcon);
+
+    // Vertical bar |
+    g.fillRect(rightX - bounds.getWidth() * 0.15f,
+        bounds.getY() + bounds.getHeight() * 0.25f,
+        bounds.getWidth() * 0.06f,
+        bounds.getHeight() * 0.5f);
     break;
 }
         
@@ -187,8 +244,10 @@ private:
 
     // GUI elements
     juce::TextButton loadButton{ "Load" };
+    IconButton goToStartButton{ IconButton::Type::Start };
     IconButton playButton{ IconButton::Type::Play };
     IconButton pauseButton{ IconButton::Type::Pause };
+    IconButton goToEndButton{ IconButton::Type::End };
     IconButton restartButton{ IconButton::Type::Restart };
     IconButton stopButton{ IconButton::Type::Stop };
     IconButton muteButton{ IconButton::Type::Mute };
