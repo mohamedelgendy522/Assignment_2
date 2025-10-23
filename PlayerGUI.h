@@ -5,7 +5,7 @@
 class IconButton : public juce::TextButton  {
 
 public:
-    enum class Type { Restart, Stop , Mute };
+    enum class Type { Play, Pause, Restart, Stop , Mute };
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; }         // getter
@@ -23,6 +23,32 @@ public:
   
         switch (type)
         {
+            case Type::Play:
+{
+    // ► triangle
+    juce::Path playIcon;
+    playIcon.addTriangle(bounds.getX() + bounds.getWidth() * 0.35f,
+        bounds.getY() + bounds.getHeight() * 0.25f,
+        bounds.getX() + bounds.getWidth() * 0.35f,
+        bounds.getY() + bounds.getHeight() * 0.75f,
+        bounds.getX() + bounds.getWidth() * 0.75f,
+        bounds.getY() + bounds.getHeight() * 0.5f);
+    g.fillPath(playIcon);
+    break;
+}
+
+case Type::Pause:
+{
+    // ‖ bars
+    float barWidth = bounds.getWidth() * 0.15f;
+    float gap = barWidth;
+    float height = bounds.getHeight() * 0.5f;
+    float top = bounds.getCentreY() - height / 2.0f;
+
+    g.fillRect(bounds.getCentreX() - gap / 2 - barWidth, top, barWidth, height);
+    g.fillRect(bounds.getCentreX() + gap / 2, top, barWidth, height);
+    break;
+}
         
             case Type::Restart:
             {
@@ -161,6 +187,8 @@ private:
 
     // GUI elements
     juce::TextButton loadButton{ "Load" };
+    IconButton playButton{ IconButton::Type::Play };
+    IconButton pauseButton{ IconButton::Type::Pause };
     IconButton restartButton{ IconButton::Type::Restart };
     IconButton stopButton{ IconButton::Type::Stop };
     IconButton muteButton{ IconButton::Type::Mute };

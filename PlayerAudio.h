@@ -10,6 +10,7 @@ public:
     bool loadFile(const juce::File& file);
 	void setMuted(bool shouldMute);
     void play();
+    void pause();
     void stop();
     void setGain(float gain);
     void setPosition(float pos);
