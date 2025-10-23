@@ -94,7 +94,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 		isRepeating = !isRepeating;
 		playerAudio.setRepeat(isRepeating);
 	}
-	if (button == &muteButton)
+	if (button == &muteButton){
         muted = !muted;
         muteButton.setMuted(muted);
         playerAudio.setMuted(muted);
