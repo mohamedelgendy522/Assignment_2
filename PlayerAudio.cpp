@@ -60,6 +60,14 @@ void PlayerAudio::play() {
 void PlayerAudio::pause() {
     transportSource.stop();
 }
+void PlayerAudio::end() {
+    auto length = transportSource.getLengthInSeconds();
+    transportSource.setPosition(length);
+}
+void PlayerAudio::start() {
+    transportSource.setPosition(0.0);
+    transportSource.stop();
+}
 void PlayerAudio::stop() {
     transportSource.stop();
     transportSource.setPosition(0.0);
