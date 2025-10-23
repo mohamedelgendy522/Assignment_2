@@ -1,20 +1,28 @@
 #include "PlayerGUI.h"
 PlayerGUI::PlayerGUI()
 {
-    for (auto* btn : { &loadButton, &restartButton , &stopButton , &repeatButton})
-    {
-        btn->addListener(this);
-        addAndMakeVisible(btn);
-    }
+    addAndMakeVisible(loadButton);
+    loadButton.addListener(this);
 
-    // Volume slider
+    addAndMakeVisible(restartButton);
+    restartButton.addListener(this);
+
+    addAndMakeVisible(stopButton);
+    stopButton.addListener(this);
+
+    addAndMakeVisible(muteButton);
+    muteButton.addListener(this);
+	
+	addAndMakeVisible(repeatButton);
+    repeatButton.addListener(this);
+
     volumeSlider.setRange(0.0, 1.0, 0.01);
     volumeSlider.setValue(0.5);
     volumeSlider.addListener(this);
     addAndMakeVisible(volumeSlider);
 }
 
- PlayerGUI::~PlayerGUI() {}
+PlayerGUI::~PlayerGUI() {}
 
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
@@ -25,19 +33,27 @@ void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFi
 {
     playerAudio.getNextAudioBlock(bufferToFill);
 }
+
 void PlayerGUI::releaseResources()
 {
     playerAudio.releaseResources();
 }
-void PlayerGUI::resized() {
-    int y = 20;
-    loadButton.setBounds(20, y, 100, 40);
-    restartButton.setBounds(140, y, 80, 40);
-    stopButton.setBounds(240, y, 80, 40);
-    volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
-	repeatButton.setBounds(340, y, 80, 40);
-}
 
+void PlayerGUI::resized()
+{
+    juce::FlexBox fb;
+    fb.flexDirection = juce::FlexBox::Direction::row;
+    fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
+
+    fb.items.add(juce::FlexItem(loadButton).withMinWidth(80.0f).withMinHeight(40.0f));
+    fb.items.add(juce::FlexItem(restartButton).withMinWidth(80.0f).withMinHeight(40.0f));
+    fb.items.add(juce::FlexItem(stopButton).withMinWidth(80.0f).withMinHeight(40.0f));
+    fb.items.add(juce::FlexItem(muteButton).withMinWidth(80.0f).withMinHeight(40.0f));
+	fb.items.add(juce::FlexItem(repeatButton).withMinWidth(80.0f).withMinHeight(40.0f));
+
+    fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
+    volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
+}
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
     if (button == &loadButton)
@@ -78,10 +94,22 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 		isRepeating = !isRepeating;
 		playerAudio.setRepeat(isRepeating);
 	}
+	if (button == &muteButton)
+        muted = !muted;
+        muteButton.setMuted(muted);
+        playerAudio.setMuted(muted);
+        if (onMuteChanged) onMuteChanged();
+    }
+}
+void PlayerGUI::toggleMute()
+{
+    muted = !muted;                        // flip state
+    if (onMuteChanged) onMuteChanged();    // notify MainComponent
+    repaint();
 }
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::darkgrey);
+    // optional: draw background/text
 }
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {

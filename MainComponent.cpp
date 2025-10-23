@@ -5,6 +5,7 @@ MainComponent::MainComponent()
 
     addAndMakeVisible(player1);
 
+    player1.onMuteChanged = [this] { updateMute(); };
     setSize(600, 400);
     setAudioChannels(0, 2);
 }
@@ -19,7 +20,7 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
     player1.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
 {
     bufferToFill.clearActiveBufferRegion();
     player1.getNextAudioBlock(bufferToFill);
@@ -30,6 +31,17 @@ void MainComponent::releaseResources()
     player1.releaseResources();
 }
 void MainComponent::resized() {
-    player1.setBounds(20, 20, getWidth() - 40, 120);
+    player1.setBounds(20, 20 , getWidth() - 40, 120);
 }
+void MainComponent::updateMute()
+{
+    isMuted = player1.isMuted();
+    playerAudio.setMuted(isMuted);
+    repaint();
+}
+
+
+
+
+
 

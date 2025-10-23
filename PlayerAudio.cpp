@@ -76,3 +76,12 @@ double PlayerAudio::getLength() {
 void PlayerAudio::setRepeat(bool shouldRepeat) {
 	Repeat = shouldRepeat;
 }
+void PlayerAudio::setMuted(bool shouldMute ) {
+    isMuted = shouldMute;
+    if (shouldMute) {
+        lastGain = transportSource.getGain();
+        transportSource.setGain(0.0f);
+    } else {
+        transportSource.setGain(lastGain);
+    }
+}
