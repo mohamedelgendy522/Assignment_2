@@ -8,7 +8,7 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
     bool loadFile(const juce::File& file);
-
+	void setMuted(bool shouldMute);
     void play();
     void stop();
     void setGain(float gain);
@@ -18,6 +18,8 @@ public:
 	void setRepeat(bool shouldRepeat);
 private:
     bool Repeat = false;
+	float lastGain = 1.0f;
+    bool isMuted = false;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
