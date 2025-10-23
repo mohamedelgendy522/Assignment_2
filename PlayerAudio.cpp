@@ -57,6 +57,9 @@ bool PlayerAudio::loadFile(const juce::File& file) {
 void PlayerAudio::play() {
     transportSource.start();
 }
+void PlayerAudio::pause() {
+    transportSource.stop();
+}
 void PlayerAudio::stop() {
     transportSource.stop();
     transportSource.setPosition(0.0);
