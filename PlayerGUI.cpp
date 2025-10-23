@@ -1,8 +1,7 @@
 #include "PlayerGUI.h"
-#include <JuceHeader.h>
 PlayerGUI::PlayerGUI()
 {
-    for (auto* btn : { &loadButton, &restartButton , &stopButton })
+    for (auto* btn : { &loadButton, &restartButton , &stopButton , &repeatButton})
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -15,14 +14,14 @@ PlayerGUI::PlayerGUI()
     addAndMakeVisible(volumeSlider);
 }
 
-PlayerGUI::~PlayerGUI(){}
+ PlayerGUI::~PlayerGUI() {}
 
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
+void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     playerAudio.getNextAudioBlock(bufferToFill);
 }
@@ -36,6 +35,7 @@ void PlayerGUI::resized() {
     restartButton.setBounds(140, y, 80, 40);
     stopButton.setBounds(240, y, 80, 40);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
+	repeatButton.setBounds(340, y, 80, 40);
 }
 
 void PlayerGUI::buttonClicked(juce::Button* button)
@@ -59,6 +59,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
                 if (file.existsAsFile())
                     playerAudio.loadFile(file);
             });
+
     }
 
     if (button == &restartButton)
@@ -71,13 +72,19 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         playerAudio.stop();
         playerAudio.setPosition(0.0);
     }
+	if (button == &repeatButton)
+	{
+		static bool isRepeating = false;
+		isRepeating = !isRepeating;
+		playerAudio.setRepeat(isRepeating);
+	}
 }
 void PlayerGUI::paint(juce::Graphics& g)
-{}
+{
+    g.fillAll(juce::Colours::darkgrey);
+}
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &volumeSlider)
         playerAudio.setGain((float)volumeSlider.getValue());
 }
-
-
