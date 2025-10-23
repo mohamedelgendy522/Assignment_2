@@ -10,7 +10,7 @@ public:
     ~MainComponent() override;
     void updateMute();
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill) override;
     void releaseResources() override;
     void resized() override;
 
