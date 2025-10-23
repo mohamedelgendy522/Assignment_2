@@ -70,19 +70,6 @@ double PlayerAudio::getPosition() {
 double PlayerAudio::getLength() {
     return transportSource.getLengthInSeconds();
 }
-float lastGain = 1.0f;
-void PlayerAudio::mute() {
-    if (!isMuted) {
-        lastGain = transportSource.getGain();
-        transportSource.setGain(0.0f);
-        isMuted = true;
-    } else {
-        transportSource.setGain(lastGain);
-        isMuted = false;
-    }
-}
-
-
 
 
 
