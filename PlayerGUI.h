@@ -1,15 +1,14 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PlayerAudio.h"
-
-class PlayerGUI : public  juce::Component,
-    public  juce::Button::Listener,
-    public  juce::Slider::Listener
+class PlayerGUI : public juce::Component,
+    public juce::Button::Listener,
+    public juce::Slider::Listener, public juce::AudioSource
 
 {
 public:
     PlayerGUI();
-    ~PlayerGUI() override ;
+    ~PlayerGUI() override;
 
     void resized() override;
 
@@ -25,6 +24,7 @@ private:
     juce::TextButton loadButton{ "Load File" };
     juce::TextButton restartButton{ "Restart" };
     juce::TextButton stopButton{ "Stop" };
+    juce::TextButton repeatButton{ "repeat" };
     juce::Slider volumeSlider;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
