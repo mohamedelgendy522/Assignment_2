@@ -116,7 +116,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     if (button == &restartButton)
     {
-        playerAudio.play();
+        playerAudio.restart();
     }
 
     if (button == &stopButton)
