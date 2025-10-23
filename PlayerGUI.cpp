@@ -3,12 +3,18 @@ PlayerGUI::PlayerGUI()
 {
     addAndMakeVisible(loadButton);
     loadButton.addListener(this);
+    
+	addAndMakeVisible(goToStartButton);
+    goToStartButton.addListener(this);
   
 	addAndMakeVisible(playButton);
     playButton.addListener(this);
 
     addAndMakeVisible(pauseButton);
     pauseButton.addListener(this);
+	
+    addAndMakeVisible(goToEndButton);
+    goToEndButton.addListener(this);
 
     addAndMakeVisible(restartButton);
     restartButton.addListener(this);
@@ -52,8 +58,10 @@ void PlayerGUI::resized()
     fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
 
     fb.items.add(juce::FlexItem(loadButton).withMinWidth(80.0f).withMinHeight(40.0f));
+	fb.items.add(juce::FlexItem(goToStartButton).withMinWidth(80.0f).withMinHeight(40.0f));
 	fb.items.add(juce::FlexItem(playButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.items.add(juce::FlexItem(pauseButton).withMinWidth(80.0f).withMinHeight(40.0f));
+	fb.items.add(juce::FlexItem(goToEndButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.items.add(juce::FlexItem(restartButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.items.add(juce::FlexItem(stopButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.items.add(juce::FlexItem(muteButton).withMinWidth(80.0f).withMinHeight(40.0f));
@@ -86,7 +94,12 @@ void PlayerGUI::buttonClicked(juce::Button* button)
 
     }
 	
-    if (button == &playButton)
+    if (button == &goToStartButton)
+    {
+    playerAudio.start();
+    }
+	
+	if (button == &playButton)
     {
     playerAudio.play();
     }
@@ -94,6 +107,11 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     if (button == &pauseButton)
     {
     playerAudio.pause();
+    }
+		
+	if (button == &goToEndButton)
+    {
+    playerAudio.end();
     }
 
     if (button == &restartButton)
