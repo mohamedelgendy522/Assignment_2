@@ -2,7 +2,7 @@
 #include <JuceHeader.h>
 PlayerGUI::PlayerGUI()
 {
-    for (auto* btn : { &loadButton, &restartButton , & stopButton , &MuteButton })
+    for (auto* btn : { &loadButton, &restartButton , &stopButton })
     {
         btn->addListener(this);
         addAndMakeVisible(btn);
@@ -36,8 +36,6 @@ void PlayerGUI::resized() {
     restartButton.setBounds(140, y, 80, 40);
     stopButton.setBounds(240, y, 80, 40);
     volumeSlider.setBounds(20, 100, getWidth() - 40, 30);
-    MuteButton.setBounds(340, y, 80, 40);
-
 }
 
 void PlayerGUI::buttonClicked(juce::Button* button)
@@ -73,10 +71,6 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         playerAudio.stop();
         playerAudio.setPosition(0.0);
     }
-    if (button == &MuteButton) {
-        playerAudio.mute();
-    }
-
 }
 void PlayerGUI::paint(juce::Graphics& g)
 {}
