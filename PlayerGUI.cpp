@@ -2,7 +2,7 @@
 #include <cstring>
 
 struct Metadata {
-    juce::String title, artist, album, year, genre;
+    juce::String title, artist, album, year;
 };
 
 Metadata readMetadata(const juce::File& file)
@@ -59,7 +59,6 @@ Metadata readMetadata(const juce::File& file)
     meta.artist = readFrame("TPE1");
     meta.album = readFrame("TALB");
     meta.year = readFrame("TYER");
-    meta.genre = readFrame("TCON");
 
     return meta;
 }
