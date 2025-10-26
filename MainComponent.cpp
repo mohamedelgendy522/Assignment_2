@@ -31,7 +31,7 @@ void MainComponent::releaseResources()
     player1.releaseResources();
 }
 void MainComponent::resized() {
-    player1.setBounds(20, 20 , getWidth() - 40, 120);
+    player1.setBounds(20, 20 , getWidth() - 40, 270);
 }
 void MainComponent::updateMute()
 {
