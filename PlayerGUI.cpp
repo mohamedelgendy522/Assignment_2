@@ -101,7 +101,7 @@ PlayerGUI::PlayerGUI()
 	
     metadataLabel.setColour(juce::Label::textColourId, juce::Colours::black);
     metadataLabel.setJustificationType(juce::Justification::centred);
-    metadataLabel.setFont(juce::Font(32.0f));
+    metadataLabel.setFont(juce::Font("Arial",32.0f,juce::Font::bold));
     addAndMakeVisible(metadataLabel);
 }
 
@@ -140,7 +140,7 @@ void PlayerGUI::resized()
 
     fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
     volumeSlider.setBounds(20, 240, getWidth() - 40, 30);
-	metadataLabel.setBounds(2, getHeight() - 185, getWidth() - 20, 150);
+	metadataLabel.setBounds(5, getHeight() - 185, getWidth() - 20, 150);
 }
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
