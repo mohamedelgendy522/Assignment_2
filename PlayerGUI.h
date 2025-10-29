@@ -253,6 +253,8 @@ private:
     IconButton muteButton{ IconButton::Type::Mute };
     juce::TextButton repeatButton{ "Repeat" };
     juce::Slider volumeSlider;
+    juce::Label metadataLabel;
+    juce::AudioFormatManager formatManager;
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
