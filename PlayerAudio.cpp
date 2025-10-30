@@ -3,21 +3,19 @@ PlayerAudio::PlayerAudio()
 {
     formatManager.registerBasicFormats();
 }
-
 PlayerAudio :: ~PlayerAudio()
 {
     transportSource.setSource(nullptr);
 }
-
-void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
+void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double
+sampleRate)
 {
-    transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
-
-void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
 {
-    transportSource.getNextAudioBlock(bufferToFill);
-    if (Repeat){
+    resampleSource.getNextAudioBlock(bufferToFill);
+    if (Repeat) {
         if ((transportSource.getLengthInSeconds() - transportSource.getCurrentPosition()) < 0.05)
         {
             transportSource.setPosition(0.0);
@@ -25,10 +23,9 @@ void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
         }
     }
 }
-
 void PlayerAudio::releaseResources()
 {
-    transportSource.releaseResources();
+    resampleSource.releaseResources();
 }
 bool PlayerAudio::loadFile(const juce::File& file) {
     if (file.existsAsFile())
@@ -56,8 +53,16 @@ bool PlayerAudio::loadFile(const juce::File& file) {
 void PlayerAudio::play() {
     transportSource.start();
 }
+void PlayerAudio::stop() {
+    transportSource.stop();
+    transportSource.setPosition(0.0);
+}
 void PlayerAudio::pause() {
     transportSource.stop();
+}
+void PlayerAudio::restart() {
+    transportSource.setPosition(0.0);
+    //transportSource.start();
 }
 void PlayerAudio::end() {
     auto length = transportSource.getLengthInSeconds();
@@ -66,13 +71,6 @@ void PlayerAudio::end() {
 void PlayerAudio::start() {
     transportSource.setPosition(0.0);
     transportSource.stop();
-}
-void PlayerAudio::stop() {
-    transportSource.stop();
-    transportSource.setPosition(0.0);
-}
-void PlayerAudio::restart() {
-    transportSource.setPosition(0.0);
 }
 void PlayerAudio::setGain(float gain) {
     transportSource.setGain(gain);
@@ -86,15 +84,14 @@ double PlayerAudio::getPosition() {
 double PlayerAudio::getLength() {
     return transportSource.getLengthInSeconds();
 }
-void PlayerAudio::setRepeat(bool shouldRepeat) {
-	Repeat = shouldRepeat;
-}
 void PlayerAudio::setMuted(bool shouldMute ) {
     isMuted = shouldMute;
-    if (shouldMute) {
-        lastGain = transportSource.getGain();
-        transportSource.setGain(0.0f);
-    } else {
-        transportSource.setGain(lastGain);
-    }
+    float currentGain = transportSource.getGain();
+    transportSource.setGain(shouldMute ? 0.0f : currentGain);
+}
+void PlayerAudio::setRepeat(bool shouldRepeat) {
+    Repeat = shouldRepeat;
+}
+void PlayerAudio::setSpeed(float s) {
+    resampleSource.setResamplingRatio(s);
 }
