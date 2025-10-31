@@ -8,14 +8,21 @@ PlayerAudio :: ~PlayerAudio()
     transportSource.setSource(nullptr);
 }
 void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double
-sampleRate)
+    sampleRate)
 {
     resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
-void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
+void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     resampleSource.getNextAudioBlock(bufferToFill);
-    if (Repeat) {
+    if (ok && A >= 0 && B > A)
+    {
+        if (transportSource.getCurrentPosition() >= B)
+        {
+            transportSource.setPosition(A);
+        }
+    }
+    else if (Repeat) {
         if ((transportSource.getLengthInSeconds() - transportSource.getCurrentPosition()) < 0.05)
         {
             transportSource.setPosition(0.0);
@@ -84,7 +91,7 @@ double PlayerAudio::getPosition() {
 double PlayerAudio::getLength() {
     return transportSource.getLengthInSeconds();
 }
-void PlayerAudio::setMuted(bool shouldMute ) {
+void PlayerAudio::setMuted(bool shouldMute) {
     isMuted = shouldMute;
     float currentGain = transportSource.getGain();
     transportSource.setGain(shouldMute ? 0.0f : currentGain);
@@ -94,4 +101,18 @@ void PlayerAudio::setRepeat(bool shouldRepeat) {
 }
 void PlayerAudio::setSpeed(float s) {
     resampleSource.setResamplingRatio(s);
+}
+void PlayerAudio::setA(float a)
+{
+    A = a;
+
+}
+void PlayerAudio::setB(float b)
+{
+    B = b;
+}
+
+void PlayerAudio::isOk(bool check)
+{
+	ok = check;
 }
