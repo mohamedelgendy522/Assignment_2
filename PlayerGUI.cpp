@@ -29,30 +29,30 @@ Metadata readMetadata(const juce::File& file)
     stream.readIntoMemoryBlock(tagData, tagSize);
 
     auto readFrame = [&](const char* id) -> juce::String
-    {
-        const char* data = (const char*)tagData.getData();
-        const char* end = data + tagData.getSize();
-
-        for (const char* p = data; p + 10 < end; )
         {
-            juce::String frameID(juce::CharPointer_ASCII(p), 4);
-            int frameSize = (p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7];
+            const char* data = (const char*)tagData.getData();
+            const char* end = data + tagData.getSize();
 
-            if (frameSize <= 0 || p + 10 + frameSize > end)
-                break;
-
-            if (frameID == id)
+            for (const char* p = data; p + 10 < end; )
             {
-                const char* frameData = p + 10;
-                juce::String text(frameData + 1, frameSize - 1);
-                return text.trim();
+                juce::String frameID(juce::CharPointer_ASCII(p), 4);
+                int frameSize = (p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7];
+
+                if (frameSize <= 0 || p + 10 + frameSize > end)
+                    break;
+
+                if (frameID == id)
+                {
+                    const char* frameData = p + 10;
+                    juce::String text(frameData + 1, frameSize - 1);
+                    return text.trim();
+                }
+
+                p += 10 + frameSize;
             }
 
-            p += 10 + frameSize;
-        }
-
-        return {};
-    };
+            return {};
+        };
 
     meta.title = readFrame("TIT2");
     meta.artist = readFrame("TPE1");
@@ -93,10 +93,13 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
 
     addAndMakeVisible(repeatButton);
     repeatButton.addListener(this);
+    
+    addAndMakeVisible(AB_loopButton);
+    AB_loopButton.addListener(this);
 
     metadataLabel.setColour(juce::Label::textColourId, juce::Colours::black);
     metadataLabel.setJustificationType(juce::Justification::centred);
-    metadataLabel.setFont(juce::Font("Arial",32.0f,juce::Font::bold));
+    metadataLabel.setFont(juce::Font("Arial", 32.0f, juce::Font::bold));
     addAndMakeVisible(metadataLabel);
 
     volumeSlider.setRange(0.0, 1.0, 0.01);
@@ -109,7 +112,7 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     speedSlider.addListener(this);
     addAndMakeVisible(speedSlider);
 
-    progressSlider.setRange(0, playerAudio.getLength() );
+    progressSlider.setRange(0, playerAudio.getLength());
     progressSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     progressSlider.addListener(this);
     addAndMakeVisible(progressSlider);
@@ -123,7 +126,7 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     addAndMakeVisible(speedLabel);
     addAndMakeVisible(positionLabel);
 
-    volumeLabel.setText("Volume" , juce::dontSendNotification);
+    volumeLabel.setText("Volume", juce::dontSendNotification);
     speedLabel.setText("Speed", juce::dontSendNotification);
     positionLabel.setText("Position", juce::dontSendNotification);
 
@@ -139,7 +142,7 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
 PlayerGUI::~PlayerGUI() {}
 
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double
-sampleRate)
+    sampleRate)
 {
     playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
@@ -157,7 +160,7 @@ void PlayerGUI::resized()
     fb.flexDirection = juce::FlexBox::Direction::row;
     fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
 
-     // changing in width and height
+    // changing in width and height
     fb.items.add(juce::FlexItem(loadButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(goToStartButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(playButton).withMinWidth(50.0f).withMinHeight(30.0f));
@@ -167,7 +170,7 @@ void PlayerGUI::resized()
     fb.items.add(juce::FlexItem(stopButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(muteButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(repeatButton).withMinWidth(80.0f).withMinHeight(40.0f));
-
+    fb.items.add(juce::FlexItem(AB_loopButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
 
     metadataLabel.setBounds(5, getHeight() - 185, getWidth() - 20, 150);
@@ -250,6 +253,33 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
         playerAudio.stop();
     }
+    else if (button == &AB_loopButton) {
+        switch (State)
+        {
+        case 0:
+            State = 1;
+            AB_loopButton.setButtonText("Set A");
+            break;
+
+        case 1:
+            playerAudio.setA(playerAudio.getPosition());
+            State = 2;
+            AB_loopButton.setButtonText("Set B");
+            break;
+
+        case 2:
+            playerAudio.setB(playerAudio.getPosition());
+            playerAudio.isOk(true);
+            State = 3;
+            AB_loopButton.setButtonText("AB Repeat ON");
+            break;
+
+        case 3:
+            playerAudio.isOk(false);
+            State = 0;
+            AB_loopButton.setButtonText("AB Repeat");
+        }
+    }
     else if (button == &repeatButton) {
         static bool isRepeating = false;
         isRepeating = !isRepeating;
@@ -294,7 +324,7 @@ static juce::String formatTime(double seconds)
     int secs = (int)(seconds) % 60;
     return juce::String::formatted("%02d:%02d", mins, secs);
 }
-void PlayerGUI :: timerCallback()
+void PlayerGUI::timerCallback()
 {
     double len = playerAudio.getLength();
     if (len > 0)
