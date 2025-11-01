@@ -30,7 +30,7 @@ private:
     bool isMuted = false;
     int State = 0;
     bool ok = false;
-	float A = -1, B = -1;
+    float A = -1, B = -1;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
