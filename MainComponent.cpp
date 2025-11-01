@@ -1,5 +1,5 @@
 #include "MainComponent.h"
-MainComponent::MainComponent() : player1(playerAudio)
+MainComponent::MainComponent() : player1(playerAudio) 
 {
     addAndMakeVisible(player1);
     player1.onMuteChanged = [this] { updateMute(); };
