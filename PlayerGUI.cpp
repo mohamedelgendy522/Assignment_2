@@ -73,11 +73,8 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     addAndMakeVisible(goToStartButton);
     goToStartButton.addListener(this);
 
-    addAndMakeVisible(playButton);
-    playButton.addListener(this);
-
-    addAndMakeVisible(pauseButton);
-    pauseButton.addListener(this);
+    addAndMakeVisible(playPauseButton);
+    playPauseButton.addListener(this);
 
     addAndMakeVisible(goToEndButton);
     goToEndButton.addListener(this);
@@ -93,9 +90,15 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
 
     addAndMakeVisible(repeatButton);
     repeatButton.addListener(this);
-    
+
     addAndMakeVisible(AB_loopButton);
     AB_loopButton.addListener(this);
+
+    addAndMakeVisible(forward10Button);
+    forward10Button.addListener(this);
+
+    addAndMakeVisible(backward10Button);
+    backward10Button.addListener(this);
 
     metadataLabel.setColour(juce::Label::textColourId, juce::Colours::black);
     metadataLabel.setJustificationType(juce::Justification::centred);
@@ -162,15 +165,17 @@ void PlayerGUI::resized()
 
     // changing in width and height
     fb.items.add(juce::FlexItem(loadButton).withMinWidth(50.0f).withMinHeight(30.0f));
+    fb.items.add(juce::FlexItem(backward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(goToStartButton).withMinWidth(50.0f).withMinHeight(30.0f));
-    fb.items.add(juce::FlexItem(playButton).withMinWidth(50.0f).withMinHeight(30.0f));
-    fb.items.add(juce::FlexItem(pauseButton).withMinWidth(50.0f).withMinHeight(30.0f));
+    fb.items.add(juce::FlexItem(playPauseButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(goToEndButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(restartButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(stopButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(muteButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(repeatButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.items.add(juce::FlexItem(AB_loopButton).withMinWidth(80.0f).withMinHeight(40.0f));
+    fb.items.add(juce::FlexItem(forward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
+
     fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
 
     metadataLabel.setBounds(5, getHeight() - 185, getWidth() - 20, 150);
@@ -233,14 +238,22 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     {
         playerAudio.start();
     }
-    else if (button == &playButton)
+    else if (button == &playPauseButton)
     {
-        playerAudio.play();
+        if (isPlaying)
+        {
+            playerAudio.pause();
+            isPlaying = false;
+            playPauseButton.setType(IconButton::Type::Play);
+        }
+        else
+        {
+            playerAudio.play();
+            isPlaying = true;
+            playPauseButton.setType(IconButton::Type::Pause);
+        }
     }
-    else if (button == &pauseButton)
-    {
-        playerAudio.pause();
-    }
+
     else if (button == &goToEndButton)
     {
         playerAudio.end();
@@ -252,6 +265,22 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     else if (button == &stopButton)
     {
         playerAudio.stop();
+    }
+    else if (button == &forward10Button)
+    {
+        double newPos = playerAudio.getPosition() + 10.0;
+        if (newPos < playerAudio.getLength())
+            playerAudio.setPosition(newPos);
+        else
+            playerAudio.setPosition(playerAudio.getLength());
+    }
+    else if (button == &backward10Button)
+    {
+        double newPos = playerAudio.getPosition() - 10.0;
+        if (newPos > 0.0)
+            playerAudio.setPosition(newPos);
+        else
+            playerAudio.setPosition(0.0);
     }
     else if (button == &AB_loopButton) {
         switch (State)
