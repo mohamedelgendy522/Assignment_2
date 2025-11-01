@@ -17,7 +17,7 @@ public:
 
     private:
         bool isMuted = false;
-        PlayerGUI player1;
+        PlayerGUI player1 ;
         PlayerAudio playerAudio;
 
     //void loadTrack(const juce::File& file);
