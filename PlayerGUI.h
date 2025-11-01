@@ -3,7 +3,7 @@
 #include "PlayerAudio.h"
 class IconButton : public juce::TextButton {
 public:
-    enum class Type { Play, Pause, Start, End, Restart, Stop, Mute };
+    enum class Type { Play, Pause, Start, End, Restart, Stop, Mute, Forward10, Backward10 };
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; } // getter
@@ -185,7 +185,61 @@ public:
             g.fillRect(x, y, size, size);
             break;
         }
+            case Type::Backward10: {
+            juce::Path back;
+
+            float w = bounds.getWidth();
+            float h = bounds.getHeight();
+            float cx = bounds.getCentreX();
+            float cy = bounds.getCentreY();
+
+            // first arrow
+            back.startNewSubPath(cx + w * 0.15f, cy - h * 0.25f);
+            back.lineTo(cx - w * 0.25f, cy);
+            back.lineTo(cx + w * 0.15f, cy + h * 0.25f);
+            back.closeSubPath();
+
+            // second arrow
+            back.startNewSubPath(cx + w * 0.35f, cy - h * 0.25f);
+            back.lineTo(cx - w * 0.05f, cy);
+            back.lineTo(cx + w * 0.35f, cy + h * 0.25f);
+            back.closeSubPath();
+
+            g.setColour(juce::Colours::black);
+            g.fillPath(back);
+            break;
+            }
+
+            case Type::Forward10: {
+            juce::Path forward;
+
+            float w = bounds.getWidth();
+            float h = bounds.getHeight();
+            float cx = bounds.getCentreX();
+            float cy = bounds.getCentreY();
+
+            // first arrow
+            forward.startNewSubPath(cx - w * 0.15f, cy - h * 0.25f);
+            forward.lineTo(cx + w * 0.25f, cy);
+            forward.lineTo(cx - w * 0.15f, cy + h * 0.25f);
+            forward.closeSubPath();
+
+            // second arrow
+            forward.startNewSubPath(cx - w * 0.35f, cy - h * 0.25f);
+            forward.lineTo(cx + w * 0.05f, cy);
+            forward.lineTo(cx - w * 0.35f, cy + h * 0.25f);
+            forward.closeSubPath();
+
+            g.setColour(juce::Colours::black);
+            g.fillPath(forward);
+            break;
+            }
         }
+    }
+    void setType(Type newType)
+    {
+        type = newType;
+        repaint();
     }
 private:
     Type type;
@@ -210,7 +264,9 @@ public:
     void releaseResources();
 
 private:
+
     bool muted = false;
+    bool isPlaying = false;
 	int State = 0;
     void toggleMute();
     void timerCallback() override;
@@ -218,12 +274,13 @@ private:
     // GUI elements
     juce::TextButton loadButton{ "Load" };
     IconButton goToStartButton{ IconButton::Type::Start };
-    IconButton playButton{ IconButton::Type::Play };
-    IconButton pauseButton{ IconButton::Type::Pause };
+    IconButton playPauseButton{ IconButton::Type::Play };
     IconButton goToEndButton{ IconButton::Type::End };
     IconButton restartButton{ IconButton::Type::Restart };
     IconButton stopButton{ IconButton::Type::Stop };
     IconButton muteButton{ IconButton::Type::Mute };
+    IconButton forward10Button{ IconButton::Type::Forward10 };
+    IconButton backward10Button{ IconButton::Type::Backward10 };
     juce::TextButton repeatButton{ "Repeat" };
     juce::TextButton AB_loopButton{ "AB Loop" };
     juce::Label metadataLabel;
