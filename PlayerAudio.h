@@ -5,8 +5,7 @@ public:
     PlayerAudio();
     ~PlayerAudio();
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo&
-        bufferToFill);
+    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
     bool loadFile(const juce::File& file);
     void setMuted(bool shouldMute);
@@ -25,6 +24,8 @@ public:
     void setA(float a);
     void setB(float b);
     void isOk(bool check);
+    void updatePlaybackLogic();
+    juce::AudioSource* getAudioSource();
 private:
     bool Repeat = false;
     bool isMuted = false;
