@@ -144,8 +144,7 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
 }
 PlayerGUI::~PlayerGUI() {}
 
-void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double
-    sampleRate)
+void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
@@ -165,16 +164,17 @@ void PlayerGUI::resized()
 
     // changing in width and height
     fb.items.add(juce::FlexItem(loadButton).withMinWidth(50.0f).withMinHeight(30.0f));
-    fb.items.add(juce::FlexItem(backward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(goToStartButton).withMinWidth(50.0f).withMinHeight(30.0f));
+    fb.items.add(juce::FlexItem(backward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(playPauseButton).withMinWidth(50.0f).withMinHeight(30.0f));
+    fb.items.add(juce::FlexItem(forward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(goToEndButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(restartButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(stopButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(muteButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(repeatButton).withMinWidth(80.0f).withMinHeight(40.0f));
     fb.items.add(juce::FlexItem(AB_loopButton).withMinWidth(80.0f).withMinHeight(40.0f));
-    fb.items.add(juce::FlexItem(forward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
+
 
     fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
 
@@ -310,7 +310,6 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         }
     }
     else if (button == &repeatButton) {
-        static bool isRepeating = false;
         isRepeating = !isRepeating;
         playerAudio.setRepeat(isRepeating);
         if (isRepeating)
@@ -318,13 +317,14 @@ void PlayerGUI::buttonClicked(juce::Button* button)
         else
             repeatButton.setButtonText("Repeat: OFF");
     }
-    else if (button == &muteButton)
+    else if (button == &muteButton) {
         muted = !muted;
-    muteButton.setMuted(muted);
-    playerAudio.setMuted(muted);
-    if (!muted)
-        playerAudio.setGain((float)volumeSlider.getValue());
-    if (onMuteChanged) onMuteChanged();
+        muteButton.setMuted(muted);
+        playerAudio.setMuted(muted);
+        if (!muted)
+            playerAudio.setGain((float)volumeSlider.getValue());
+        if (onMuteChanged) onMuteChanged();
+    }
 }
 void PlayerGUI::toggleMute()
 {

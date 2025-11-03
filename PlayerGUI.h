@@ -264,7 +264,7 @@ public:
     void releaseResources();
 
 private:
-
+    bool isRepeating = false;
     bool muted = false;
     bool isPlaying = false;
 	int State = 0;

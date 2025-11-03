@@ -7,14 +7,12 @@ PlayerAudio :: ~PlayerAudio()
 {
     transportSource.setSource(nullptr);
 }
-void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double
-    sampleRate)
+void PlayerAudio::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
-void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+void PlayerAudio::updatePlaybackLogic()
 {
-    resampleSource.getNextAudioBlock(bufferToFill);
     if (ok && A >= 0 && B > A)
     {
         if (transportSource.getCurrentPosition() >= B)
@@ -29,6 +27,13 @@ void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
             transportSource.start();
         }
     }
+}
+void PlayerAudio::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
+{
+    updatePlaybackLogic();
+
+    resampleSource.getNextAudioBlock(bufferToFill);
+
 }
 void PlayerAudio::releaseResources()
 {
@@ -115,4 +120,8 @@ void PlayerAudio::setB(float b)
 void PlayerAudio::isOk(bool check)
 {
 	ok = check;
+}
+juce :: AudioSource* PlayerAudio::getAudioSource()
+{
+    return &resampleSource;
 }
