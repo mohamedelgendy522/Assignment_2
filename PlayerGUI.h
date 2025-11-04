@@ -247,7 +247,9 @@ private:
 };
 class PlayerGUI : public juce::Component,
     public juce::Button::Listener,
-    public juce::Slider::Listener, public juce::Timer
+    public juce::Slider::Listener,
+    public juce::Timer,
+    public juce::ListBoxModel
 {
 public:
     PlayerGUI(PlayerAudio& player);
@@ -263,6 +265,10 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
 
+    int getNumRows() override;
+    void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
+    void selectedRowsChanged(int lastRowSelected) override;
+
 private:
     bool isRepeating = false;
     bool muted = false;
@@ -271,6 +277,7 @@ private:
     void toggleMute();
     void timerCallback() override;
     PlayerAudio& playerAudio;
+    
     // GUI elements
     juce::TextButton loadButton{ "Load" };
     IconButton goToStartButton{ IconButton::Type::Start };
@@ -282,14 +289,20 @@ private:
     IconButton forward10Button{ IconButton::Type::Forward10 };
     IconButton backward10Button{ IconButton::Type::Backward10 };
     juce::TextButton repeatButton{ "Repeat" };
-    juce::TextButton AB_loopButton{ "AB Loop" };
-    juce::Label metadataLabel;
-    juce::AudioFormatManager formatManager;
+    juce::TextButton AB_loopButton{ "AB Loop" };    
     juce::Slider volumeSlider;
+    juce::Label metadataLabel;
     juce::Slider speedSlider;
     juce::Slider progressSlider;
     juce::Label timeLabel, volumeLabel, speedLabel, positionLabel;
+
+    juce::AudioFormatManager formatManager;
+    
     std::unique_ptr<juce::FileChooser> fileChooser;
+
+    juce::ListBox playlistBox;
+    juce::Array<juce::File> playlistFiles;
+
     // Event handlers
     void buttonClicked(juce::Button* button) override;
     void sliderValueChanged(juce::Slider* slider) override;
