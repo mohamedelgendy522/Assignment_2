@@ -185,7 +185,7 @@ public:
             g.fillRect(x, y, size, size);
             break;
         }
-            case Type::Backward10: {
+        case Type::Backward10: {
             juce::Path back;
 
             float w = bounds.getWidth();
@@ -208,9 +208,9 @@ public:
             g.setColour(juce::Colours::white);
             g.fillPath(back);
             break;
-            }
+        }
 
-            case Type::Forward10: {
+        case Type::Forward10: {
             juce::Path forward;
 
             float w = bounds.getWidth();
@@ -233,7 +233,7 @@ public:
             g.setColour(juce::Colours::white);
             g.fillPath(forward);
             break;
-            }
+        }
         }
     }
     void setType(Type newType)
@@ -273,11 +273,11 @@ private:
     bool isRepeating = false;
     bool muted = false;
     bool isPlaying = false;
-	int State = 0;
+    int State = 0;
     void toggleMute();
     void timerCallback() override;
     PlayerAudio& playerAudio;
-    
+
     // GUI elements
     juce::TextButton loadButton{ "Load" };
     IconButton goToStartButton{ IconButton::Type::Start };
@@ -289,7 +289,7 @@ private:
     IconButton forward10Button{ IconButton::Type::Forward10 };
     IconButton backward10Button{ IconButton::Type::Backward10 };
     juce::TextButton repeatButton{ "Repeat" };
-    juce::TextButton AB_loopButton{ "AB Loop" };    
+    juce::TextButton AB_loopButton{ "AB Loop" };
     juce::Slider volumeSlider;
     juce::Label metadataLabel;
     juce::Slider speedSlider;
@@ -297,7 +297,7 @@ private:
     juce::Label timeLabel, volumeLabel, speedLabel, positionLabel;
 
     juce::AudioFormatManager formatManager;
-    
+
     std::unique_ptr<juce::FileChooser> fileChooser;
 
     juce::ListBox playlistBox;
@@ -306,5 +306,7 @@ private:
     // Event handlers
     void buttonClicked(juce::Button* button) override;
     void sliderValueChanged(juce::Slider* slider) override;
+    juce::TextButton addMarkerButton{ "Add Marker" };
+    juce::ComboBox markersBox;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
 };
