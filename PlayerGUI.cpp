@@ -163,9 +163,9 @@ void PlayerGUI::resized()
 
     fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
 
-    playlistBox.setBounds(20, 360, getWidth() - 40, 250);
+    playlistBox.setBounds(20, 75, getWidth() - 850, 175);
     volumeSlider.setBounds(60, 270, getWidth() - 60, 30);
-    metadataLabel.setBounds(20, getHeight() - 720, getWidth() - 20, 150);
+    metadataLabel.setBounds(350, getHeight() - 290, getWidth() - 20, 150);
     speedSlider.setBounds(60, 250, getWidth() - 60, 30);
     progressSlider.setBounds(60, 290, getWidth() - 60, 30);
     timeLabel.setBounds(60, 305, getWidth() - 60, 30);
@@ -186,7 +186,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             "*.wav;*.mp3");
 
         fileChooser->launchAsync(
-            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectMultipleItems,
             [this](const juce::FileChooser& fc)
             {
                juce::Array<juce::File> files = fc.getResults();
@@ -317,6 +317,15 @@ void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 }
 
 int PlayerGUI::getNumRows() { return playlistFiles.size(); }
+
+void PlayerGUI::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
+{
+    if (rowIsSelected) g.fillAll(juce::Colours::lightblue);
+    else
+        g.fillAll(juce::Colours::white);
+    if (rowNumber >= 0 && rowNumber < playlistFiles.size())
+        g.drawText(playlistFiles[rowNumber].getFileNameWithoutExtension(), 5, 0, width, height, juce::Justification::centredLeft);
+}
 
 static juce::String formatTime(double seconds)
 {
