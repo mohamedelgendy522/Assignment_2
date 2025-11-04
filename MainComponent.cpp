@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 MainComponent::MainComponent()
 {
+    playerAudio2.loadLastSession();
     addAndMakeVisible(player1);
     addAndMakeVisible(player2);
     player1.onMuteChanged = [this] { updateMute(); };
@@ -19,10 +20,11 @@ MainComponent::MainComponent()
 
         if (mixEnabled) {
             mixToggle.setButtonText("Mix (both tracks): ON");
-        } else {
+        }
+        else {
             mixToggle.setButtonText("Mix (both tracks): OFF");
         }
-    };
+        };
     // Crossfade slider setup
     addAndMakeVisible(crossfadeSlider);
     crossfadeSlider.setRange(0.0, 1.0, 0.01);
@@ -41,7 +43,7 @@ MainComponent::MainComponent()
 
         playerAudio1.setGain(player1Gain);
         playerAudio2.setGain(player2Gain);
-    };
+        };
 
     addAndMakeVisible(crossfadeLabel);
     crossfadeLabel.setText("Crossfade", juce::dontSendNotification);
@@ -54,6 +56,7 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     shutdownAudio();
+    playerAudio2.saveLastSession();
 }
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
@@ -66,7 +69,7 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 
     mixer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
-void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo &bufferToFill)
+void MainComponent::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     bufferToFill.clearActiveBufferRegion();
     if (mixEnabled)
