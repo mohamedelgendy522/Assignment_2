@@ -307,4 +307,6 @@ private:
     void buttonClicked(juce::Button* button) override;
     void sliderValueChanged(juce::Slider* slider) override;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PlayerGUI)
+    juce::TextButton addMarkerButton{ "Add Marker" };
+    juce::ComboBox markersBox;
 };
