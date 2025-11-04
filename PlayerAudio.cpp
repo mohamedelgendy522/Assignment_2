@@ -57,10 +57,48 @@ bool PlayerAudio::loadFile(const juce::File& file) {
                 0,
                 nullptr,
                 reader->sampleRate);
+            currentAudioFile = file;
             return true;
         }
     }
     return false;
+}
+void PlayerAudio::saveLastSession()
+{
+    juce::File sessionFile = juce::File::getSpecialLocation(
+        juce::File::userApplicationDataDirectory).getChildFile("LastSession.txt");
+
+    if (currentAudioFile.existsAsFile())
+    {
+        juce::String content;
+        content << "file=" << currentAudioFile.getFullPathName() << "\n";
+        content << "position=" << transportSource.getCurrentPosition() << "\n";
+        sessionFile.replaceWithText(content);
+    }
+}
+
+void PlayerAudio::loadLastSession()
+{
+    juce::File sessionFile = juce::File::getSpecialLocation(
+        juce::File::userApplicationDataDirectory).getChildFile("LastSession.txt");
+
+    if (sessionFile.existsAsFile())
+    {
+        juce::StringArray lines;
+        sessionFile.readLines(lines);
+
+        juce::String filePath = lines[0].fromFirstOccurrenceOf("file=", false, false);
+        juce::String positionStr = lines[1].fromFirstOccurrenceOf("position=", false, false);
+
+        juce::File audioFile(filePath);
+        double position = positionStr.getDoubleValue();
+
+        if (audioFile.existsAsFile())
+        {
+            loadFile(audioFile);
+            transportSource.setPosition(position);
+        }
+    }
 }
 void PlayerAudio::play() {
     transportSource.start();
@@ -82,6 +120,9 @@ void PlayerAudio::end() {
 void PlayerAudio::start() {
     transportSource.setPosition(0.0);
     transportSource.stop();
+}
+void PlayerAudio::playFromStart() {
+    transportSource.start();
 }
 void PlayerAudio::setGain(float gain) {
     transportSource.setGain(gain);
@@ -118,9 +159,9 @@ void PlayerAudio::setB(float b)
 
 void PlayerAudio::isOk(bool check)
 {
-	ok = check;
+    ok = check;
 }
-juce :: AudioSource* PlayerAudio::getAudioSource()
+juce::AudioSource* PlayerAudio::getAudioSource()
 {
     return &resampleSource;
 }
