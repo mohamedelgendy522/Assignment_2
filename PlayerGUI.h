@@ -13,9 +13,9 @@ public:
         // Background color
         g.setColour(isButtonDown ? juce::Colours::darkgrey
             : (isMouseOver ? juce::Colours::grey :
-                juce::Colours::lightgrey));
+                juce::Colours::black));
         g.fillRoundedRectangle(bounds, 8.0f);
-        g.setColour(juce::Colours::black);
+        g.setColour(juce::Colours::white);
 
         switch (type)
         {
@@ -162,7 +162,7 @@ public:
                 midY
             );
             g.fillPath(startIcon);
-            g.setColour(juce::Colours::black);
+            g.setColour(juce::Colours::white);
             g.fillPath(speaker);
             // Mute line (cross line over the speaker)
             g.setColour(juce::Colours::red);
@@ -205,7 +205,7 @@ public:
             back.lineTo(cx + w * 0.35f, cy + h * 0.25f);
             back.closeSubPath();
 
-            g.setColour(juce::Colours::black);
+            g.setColour(juce::Colours::white);
             g.fillPath(back);
             break;
             }
@@ -230,7 +230,7 @@ public:
             forward.lineTo(cx - w * 0.35f, cy + h * 0.25f);
             forward.closeSubPath();
 
-            g.setColour(juce::Colours::black);
+            g.setColour(juce::Colours::white);
             g.fillPath(forward);
             break;
             }
