@@ -225,7 +225,7 @@ class PlayerGUI : public juce::Component,
 {
 public:
 
-    PlayerGUI();
+    PlayerGUI(PlayerAudio& player);
     bool isMuted() const { return muted; }
     std::function<void()> onMuteChanged;
     ~PlayerGUI() override;
@@ -240,7 +240,7 @@ public:
 private:
     bool muted = false;
     void toggleMute();
-    PlayerAudio playerAudio;
+    PlayerAudio& playerAudio;
 
     // GUI elements
     juce::TextButton loadButton{ "Load" };
