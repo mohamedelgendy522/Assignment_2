@@ -81,7 +81,7 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     addAndMakeVisible(backward10Button);
     backward10Button.addListener(this);
 
-    metadataLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+    metadataLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     metadataLabel.setJustificationType(juce::Justification::centred);
     metadataLabel.setFont(juce::Font("Arial", 32.0f, juce::Font::bold));
     addAndMakeVisible(metadataLabel);
@@ -104,7 +104,7 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
 
     addAndMakeVisible(timeLabel);
     timeLabel.setJustificationType(juce::Justification::centred);
-    timeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+    timeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
     addAndMakeVisible(volumeLabel);
     addAndMakeVisible(speedLabel);
@@ -114,9 +114,9 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     speedLabel.setText("Speed", juce::dontSendNotification);
     positionLabel.setText("Position", juce::dontSendNotification);
 
-    speedLabel.setColour(juce::Label::textColourId, juce::Colours::black);
-    volumeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
-    positionLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+    speedLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    volumeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
     volumeLabel.attachToComponent(&volumeSlider, true);
     speedLabel.attachToComponent(&speedSlider, true);
