@@ -43,11 +43,38 @@ static Metadata readMetadata(const juce::File& file)
     return meta;
 }
 
+
 PlayerGUI::PlayerGUI(PlayerAudio& player)
     : playerAudio(player)
 {
+    addAndMakeVisible(addMarkerButton);
+    addAndMakeVisible(markersBox);
+    addMarkerButton.onClick = [this]()
+        {
+            double pos = playerAudio.getPosition();
+            playerAudio.addMarker(pos);
+
+            int id = markersBox.getNumItems() + 1;
+            markersBox.addItem("Marker " + juce::String(id) + " - " + juce::String(pos, 2) + "s", id);
+        };
+    markersBox.onChange = [this]()
+        {
+            int selectedId = markersBox.getSelectedId();
+            if (selectedId > 0)
+            {
+                double pos = playerAudio.getMarkers()[selectedId - 1];
+                playerAudio.stop();
+                playerAudio.setPosition(pos);
+                juce::Timer::callAfterDelay(100, [this]() {
+                    playerAudio.playFromStart();
+                    });
+
+                juce::Logger::outputDebugString("Jump to marker " + juce::String(pos));
+            }
+        };
     formatManager.registerBasicFormats();
 
+    
     addAndMakeVisible(loadButton);
     loadButton.addListener(this);
 
@@ -148,6 +175,8 @@ void PlayerGUI::resized()
     fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
 
     // changing in width and height
+    fb.items.add(juce::FlexItem(addMarkerButton).withMinWidth(100.0f).withMinHeight(30.0f));
+    fb.items.add(juce::FlexItem(markersBox).withMinWidth(200.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(loadButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(goToStartButton).withMinWidth(50.0f).withMinHeight(30.0f));
     fb.items.add(juce::FlexItem(backward10Button).withMinWidth(60.0f).withMinHeight(30.0f));
@@ -189,18 +218,18 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectMultipleItems,
             [this](const juce::FileChooser& fc)
             {
-               juce::Array<juce::File> files = fc.getResults();
-               for (auto& file : files)
-            {
-               if (file.existsAsFile() && !playlistFiles.contains(file))
-               playlistFiles.add(file);
-            }
+                juce::Array<juce::File> files = fc.getResults();
+                for (auto& file : files)
+                {
+                    if (file.existsAsFile() && !playlistFiles.contains(file))
+                        playlistFiles.add(file);
+                }
 
-               playlistBox.updateContent();
+                playlistBox.updateContent();
 
-               if (playlistFiles.size() > 0)
-               playlistBox.selectRow(0);
-           });
+                if (playlistFiles.size() > 0)
+                    playlistBox.selectRow(0);
+            });
     }
     else if (button == &goToStartButton)
     {
@@ -367,4 +396,3 @@ void PlayerGUI::selectedRowsChanged(int lastRowSelected)
         metadataLabel.setText(info, juce::dontSendNotification);
     }
 }
-
