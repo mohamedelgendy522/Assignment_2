@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 MainComponent::MainComponent()
 {
+    playerAudio.loadLastSession();
     addAndMakeVisible(player1);
     addAndMakeVisible(player2);
     player1.onMuteChanged = [this] { updateMute(); };
@@ -54,6 +55,7 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     shutdownAudio();
+    playerAudio.saveLastSession();
 }
 void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
