@@ -26,9 +26,16 @@ public:
     void isOk(bool check);
     void updatePlaybackLogic();
     juce::AudioSource* getAudioSource();
+    void saveLastSession();
+	void loadLastSession();
+    std::vector<double> markers;
+    void addMarker(double pos) { markers.push_back(pos); }
+    const std::vector<double>& getMarkers() const { return markers; }
+    void playFromStart();
 private:
     bool Repeat = false;
     bool isMuted = false;
+    juce::File currentAudioFile;
     int State = 0;
     bool ok = false;
     float A = -1, B = -1;
