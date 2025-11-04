@@ -6,7 +6,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(player1);
 
     player1.onMuteChanged = [this] { updateMute(); };
-    setSize(600, 400);
+    setSize(650, 450);
     setAudioChannels(0, 2);
 }
 
@@ -31,7 +31,7 @@ void MainComponent::releaseResources()
     player1.releaseResources();
 }
 void MainComponent::resized() {
-    player1.setBounds(20, 20 , getWidth() - 40, 270);
+    player1.setBounds(20, 20 , getWidth() - 40, 800);
 }
 void MainComponent::updateMute()
 {
