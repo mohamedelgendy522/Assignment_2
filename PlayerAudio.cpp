@@ -74,7 +74,6 @@ void PlayerAudio::pause() {
 }
 void PlayerAudio::restart() {
     transportSource.setPosition(0.0);
-    //transportSource.start();
 }
 void PlayerAudio::end() {
     auto length = transportSource.getLengthInSeconds();
