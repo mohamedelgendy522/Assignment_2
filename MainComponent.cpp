@@ -10,7 +10,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(mixToggle);
     mixToggle.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
     mixToggle.setColour(juce::TextButton::textColourOffId, juce::Colours::black);
-    mixToggle.setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
+    mixToggle.setColour(juce::TextButton::buttonColourId, juce::Colours::white);
     mixToggle.setColour(juce::TextButton::buttonOnColourId, juce::Colours::lightgrey);
     mixToggle.setClickingTogglesState(true);
 
@@ -46,7 +46,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(crossfadeLabel);
     crossfadeLabel.setText("Crossfade", juce::dontSendNotification);
     crossfadeLabel.setJustificationType(juce::Justification::centred);
-    crossfadeLabel.setColour(juce::Label::textColourId, juce::Colours::black);
+    crossfadeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
     setSize(1000, 700);
     setAudioChannels(0, 2);
