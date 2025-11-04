@@ -1,69 +1,51 @@
 #include "PlayerGUI.h"
 #include <cstring>
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
+#include <taglib/audioproperties.h>
 
 struct Metadata {
-    juce::String title, artist, album, year;
+    juce::String title, artist, album, year, duration;
 };
 
-Metadata readMetadata(const juce::File& file)
+static Metadata readMetadata(const juce::File& file)
 {
     Metadata meta;
-    juce::FileInputStream stream(file);
 
-    if (!stream.openedOk())
-        return meta;
+    TagLib::FileRef f(file.getFullPathName().toRawUTF8());
 
-    char header[10];
-    if (stream.read(header, 10) != 10)
-        return meta;
+    if (!f.isNull() && f.tag())
+    {
+        auto* tag = f.tag();
+        meta.title = juce::String(tag->title().toCString(true));
+        meta.artist = juce::String(tag->artist().toCString(true));
+        meta.album = juce::String(tag->album().toCString(true));
+        unsigned int year = tag->year();
+        meta.year = (year != 0 ? juce::String(year) : "Unknown Year");
+    }
 
-    if (std::strncmp(header, "ID3", 3) != 0)
-        return meta; 
+    juce::AudioFormatManager formatManager;
+    formatManager.registerBasicFormats();
+    std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
+    if (reader)
+    {
+        double seconds = reader->lengthInSamples / reader->sampleRate;
+        int totalSeconds = static_cast<int>(seconds);
 
-    int tagSize =
-        ((header[6] & 0x7F) << 21) |
-        ((header[7] & 0x7F) << 14) |
-        ((header[8] & 0x7F) << 7) |
-        (header[9] & 0x7F);
+        int minutes = totalSeconds / 60;
+        int secs = totalSeconds % 60;
 
-    juce::MemoryBlock tagData;
-    stream.readIntoMemoryBlock(tagData, tagSize);
+        meta.duration = juce::String::formatted("%02d:%02d", minutes, secs);
+    }
 
-    auto readFrame = [&](const char* id) -> juce::String
-        {
-            const char* data = (const char*)tagData.getData();
-            const char* end = data + tagData.getSize();
-
-            for (const char* p = data; p + 10 < end; )
-            {
-                juce::String frameID(juce::CharPointer_ASCII(p), 4);
-                int frameSize = (p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7];
-
-                if (frameSize <= 0 || p + 10 + frameSize > end)
-                    break;
-
-                if (frameID == id)
-                {
-                    const char* frameData = p + 10;
-                    juce::String text(frameData + 1, frameSize - 1);
-                    return text.trim();
-                }
-
-                p += 10 + frameSize;
-            }
-
-            return {};
-        };
-
-    meta.title = readFrame("TIT2");
-    meta.artist = readFrame("TPE1");
-    meta.album = readFrame("TALB");
-    meta.year = readFrame("TYER");
+    if (meta.title.isEmpty())
+        meta.title = file.getFileNameWithoutExtension();
 
     return meta;
 }
 
-PlayerGUI::PlayerGUI()
+PlayerGUI::PlayerGUI(PlayerAudio& player)
+    : playerAudio(player)
 {
 	formatManager.registerBasicFormats();
 	
@@ -140,7 +122,7 @@ void PlayerGUI::resized()
 
     fb.performLayout(getLocalBounds().reduced(20, 20).removeFromTop(50));
     volumeSlider.setBounds(20, 240, getWidth() - 40, 30);
-	metadataLabel.setBounds(5, getHeight() - 185, getWidth() - 20, 150);
+	metadataLabel.setBounds(20, getHeight() - , getWidth() - 20, 150);
 }
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
@@ -164,28 +146,17 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             {
                 playerAudio.loadFile(file);
 
-                // Read metadata and show info
-                auto meta = readMetadata(file);
+                // Read metadata and show info    
+				auto meta = readMetadata(file);
 
-                juce::String info;
-                info += "Title: " + (meta.title.isNotEmpty() ? meta.title : file.getFileNameWithoutExtension()) + "\n";
-                info += "Artist: " + (meta.artist.isNotEmpty() ? meta.artist : "Unknown Artist") + "\n";
-                info += "Album: " + (meta.album.isNotEmpty() ? meta.album : "Unknown Album") + "\n";
-                info += "Year: " + (meta.year.isNotEmpty() ? meta.year : "Unknown Year") + "\n";
+        juce::String info;
+        info += "Title: " + (meta.title.isNotEmpty() ? meta.title : file.getFileNameWithoutExtension()) + "\n";
+        info += "Artist: " + (meta.artist.isNotEmpty() ? meta.artist : "Unknown Artist") + "\n";
+        info += "Album: " + (meta.album.isNotEmpty() ? meta.album : "Unknown Album") + "\n";
+        info += "Year: " + (meta.year.isNotEmpty() ? meta.year : "Unknown Year") + "\n";
+        info += "Duration: " + (meta.duration.isNotEmpty() ? meta.duration : "Unknown Duration");
 
-                std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
-                if (reader)
-                {
-                    double durationSecs = reader->lengthInSamples / reader->sampleRate;
-                    int totalSeconds = static_cast<int>(durationSecs);
-                    int hours = totalSeconds / 3600;
-                    int minutes = (totalSeconds % 3600) / 60;
-                    int seconds = totalSeconds % 60;
-
-                    info += juce::String::formatted("Duration: %02d:%02d:%02d", hours, minutes, seconds);
-                }
-
-                metadataLabel.setText(info, juce::dontSendNotification);
+        metadataLabel.setText(info, juce::dontSendNotification);
             }
 
         });
