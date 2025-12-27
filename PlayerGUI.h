@@ -3,19 +3,28 @@
 #include "PlayerAudio.h"
 class IconButton : public juce::TextButton {
 public:
-    enum class Type { Play, Pause, Start, End, Restart, Stop, Mute, Forward10, Backward10 };
+    void setRepeating(bool r) { repeating = r; repaint(); }
+    bool isRepeating() const { return repeating; }
+
+    enum class Type { Play, Pause, Start, End, Restart, Stop, Mute, Forward10, Backward10, Repeat };
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; } // getter
     void paintButton(juce::Graphics& g, bool isMouseOver, bool
         isButtonDown) override {
         auto bounds = getLocalBounds().toFloat();
-        // Background color
-        g.setColour(isButtonDown ? juce::Colours::darkgrey
-            : (isMouseOver ? juce::Colours::grey :
-                juce::Colours::black));
+        g.setColour(juce::Colours::transparentBlack);
         g.fillRoundedRectangle(bounds, 8.0f);
+
+        // 🔹 رسم حدود خفيفة فقط عند التحويم
+        if (isMouseOver) {
+            g.setColour(juce::Colours::white.withAlpha(0.3f));
+            g.drawRoundedRectangle(bounds.reduced(1.0f), 8.0f, 1.0f);
+        }
+
+        // 🔹 الرسم الأساسي للأيقونة
         g.setColour(juce::Colours::white);
+       
 
         switch (type)
         {
@@ -234,6 +243,46 @@ public:
             g.fillPath(forward);
             break;
         }
+        case Type::Repeat:
+        {// شكل تكرار تقليدي - سهم يلتف حول نفسه
+            auto center = bounds.getCentre();
+            float radius = bounds.getWidth() * 0.25f;
+
+            // رسم سهم دائري
+            juce::Path repeatPath;
+
+            // جزء من دائرة (3/4 دائرة)
+            repeatPath.addArc(center.x - radius, center.y - radius,
+                             radius * 2, radius * 2,
+                             juce::MathConstants<float>::pi * 0.25f,  // بداية من أعلى اليمين
+                             juce::MathConstants<float>::pi * 1.75f,  // نهاية عند أعلى اليسار
+                             true);
+
+            // رأس السهم
+            float arrowSize = radius * 0.3f;
+            juce::Path arrowHead;
+            arrowHead.addTriangle(
+                center.x, center.y - radius - arrowSize,           // نقطة
+                center.x - arrowSize, center.y - radius,           // يسار
+                center.x + arrowSize, center.y - radius            // يمين
+            );
+
+            // تحديد اللون حسب الحالة
+            if (repeating) {
+                g.setColour(juce::Colours::lightgreen);
+                // إضافة رقم "1" صغير للإشارة إلى التكرار مرة واحدة
+                g.setFont(juce::Font(bounds.getHeight() * 0.3f));
+                g.drawText("1", bounds, juce::Justification::centred);
+            } else {
+                g.setColour(juce::Colours::white);
+            }
+
+            // رسم المسار
+            g.strokePath(repeatPath, juce::PathStrokeType(2.0f));
+            g.fillPath(arrowHead);
+
+            break;
+}
         }
     }
     void setType(Type newType)
@@ -244,6 +293,7 @@ public:
 private:
     Type type;
     bool muted = false;
+    bool repeating = false;
 };
 class PlayerGUI : public juce::Component,
     public juce::Button::Listener,
@@ -269,7 +319,11 @@ public:
     void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
     void selectedRowsChanged(int lastRowSelected) override;
 
+
 private:
+    int buttonHeight = 40;
+    int controlHeight = 100;
+    int playlistHeight = 200;
     bool isRepeating = false;
     bool muted = false;
     bool isPlaying = false;
@@ -288,11 +342,13 @@ private:
     IconButton muteButton{ IconButton::Type::Mute };
     IconButton forward10Button{ IconButton::Type::Forward10 };
     IconButton backward10Button{ IconButton::Type::Backward10 };
-    juce::TextButton repeatButton{ "Repeat" };
+    IconButton repeatButton{ IconButton::Type::Repeat };
     juce::TextButton AB_loopButton{ "AB Loop" };
     juce::Slider volumeSlider;
-    juce::Label metadataLabel;
     juce::Slider speedSlider;
+
+    juce::Label metadataLabel;
+
     juce::Slider progressSlider;
     juce::Label timeLabel, volumeLabel, speedLabel, positionLabel;
 
