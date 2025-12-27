@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 MainComponent::MainComponent()
 {
+
     playerAudio2.loadLastSession();
     addAndMakeVisible(player1);
     addAndMakeVisible(player2);
@@ -17,14 +18,9 @@ MainComponent::MainComponent()
 
     mixToggle.onClick = [this]() {
         mixEnabled = mixToggle.getToggleState();
+        mixToggle.setButtonText(mixEnabled ? "Mix (both tracks): ON" : "Mix (both tracks): OFF");
+    };
 
-        if (mixEnabled) {
-            mixToggle.setButtonText("Mix (both tracks): ON");
-        }
-        else {
-            mixToggle.setButtonText("Mix (both tracks): OFF");
-        }
-        };
     // Crossfade slider setup
     addAndMakeVisible(crossfadeSlider);
     crossfadeSlider.setRange(0.0, 1.0, 0.01);
@@ -33,24 +29,15 @@ MainComponent::MainComponent()
     crossfadeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 
     crossfadeSlider.onValueChange = [this]() {
-        // Update gains based on crossfade position
-        float crossfadeValue = (float)crossfadeSlider.getValue();
-
-        // When slider is at top (1.0): player1 full volume, player2 silent
-        // When slider is at bottom (0.0): player1 silent, player2 full volume
-        float player1Gain = crossfadeValue;
-        float player2Gain = 1.0f - crossfadeValue;
-
-        playerAudio1.setGain(player1Gain);
-        playerAudio2.setGain(player2Gain);
-        };
+        updateCrossfade();
+    };
 
     addAndMakeVisible(crossfadeLabel);
     crossfadeLabel.setText("Crossfade", juce::dontSendNotification);
     crossfadeLabel.setJustificationType(juce::Justification::centred);
     crossfadeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
-    setSize(1000, 700);
+    setSize(1200, 700); // زيادة العرض ليتناسب مع التخطيط الجديد
     setAudioChannels(0, 2);
 }
 MainComponent::~MainComponent()
@@ -92,19 +79,28 @@ void MainComponent::releaseResources()
     player2.releaseResources();
 }
 void MainComponent::resized() {
-    auto area = getLocalBounds().reduced(10);
+    auto area = getLocalBounds().reduced(15);
+
+    // زر Mix في الأعلى
     auto top = area.removeFromTop(30);
     mixToggle.setBounds(top.removeFromLeft(200).reduced(4));
 
-    // Crossfade slider on the right side
-    auto crossfadeArea = area.removeFromRight(60);
+    // تقسيم المساحة المتبقية إلى ثلاثة أجزاء أفقية
+    // player1 | crossfade | player2
+    int crossfadeWidth = 80;  // عرض شريط crossfade
+    int playerWidth = (area.getWidth() - crossfadeWidth) / 2;
+
+    // player1 على اليسار
+    auto player1Area = area.removeFromLeft(playerWidth);
+    player1.setBounds(player1Area.reduced(5));
+
+    // crossfade في المنتصف
+    auto crossfadeArea = area.removeFromLeft(crossfadeWidth);
     crossfadeLabel.setBounds(crossfadeArea.removeFromTop(20));
     crossfadeSlider.setBounds(crossfadeArea.reduced(5));
 
-    // split remaining vertically between players
-    auto half = area.removeFromTop(area.getHeight() / 2);
-    player1.setBounds(half);
-    player2.setBounds(area);
+    // player2 على اليمين
+    player2.setBounds(area.reduced(5));
 }
 void MainComponent::updateMute()
 {
@@ -113,5 +109,60 @@ void MainComponent::updateMute()
 
     playerAudio1.setMuted(player1Muted);
     playerAudio2.setMuted(player2Muted);
+    repaint();
+}
+void MainComponent::paint(juce::Graphics& g)
+{
+
+    juce::Colour colMaxPurple = juce::Colour(0xFF733381);  // Maximum Purple
+    juce::Colour colImperial = juce::Colour(0xFF612E6C);   // Imperial
+    juce::Colour colJapViolet = juce::Colour(0xFF4F2958);  // Japanese Violet
+    juce::Colour colAmerPurple = juce::Colour(0xFF3E2443); // American Purple
+    juce::Colour colDarkPurple = juce::Colour(0xFF2C1F2F); // Dark Purple
+    juce::Colour colEerieBlack = juce::Colour(0xFF1A1A1A); // Eerie Black
+
+    // إنشاء تدرج رأسي
+    juce::ColourGradient gradient(
+        colMaxPurple,
+        getLocalBounds().getTopLeft().toFloat(),
+        colEerieBlack,
+        getLocalBounds().getBottomLeft().toFloat(),
+        false
+    );
+
+    gradient.addColour(0.2, colImperial);
+    gradient.addColour(0.4, colJapViolet);
+    gradient.addColour(0.6, colAmerPurple);
+    gradient.addColour(0.8, colDarkPurple);
+
+    g.setGradientFill(gradient);
+    g.fillRect(getLocalBounds());
+
+    // رسم العنوان بالأبيض
+    g.setColour(juce::Colours::white.withAlpha(0.9f));
+    g.setFont(juce::Font(20.0f, juce::Font::bold));
+    g.drawText("Dual Audio Player",
+        getLocalBounds().removeFromTop(50),
+        juce::Justification::centred);
+
+    // إضافة خطوط فاصلة للتصميم
+    g.setColour(juce::Colours::white.withAlpha(0.3f));
+    int centerX = getWidth() / 2;
+    g.drawLine(centerX - 40, 40, centerX - 40, getHeight() - 40, 2.0f);
+    g.drawLine(centerX + 40, 40, centerX + 40, getHeight() - 40, 2.0f);
+}
+void MainComponent::updateCrossfade()
+{
+    float crossfadeValue = (float)crossfadeSlider.getValue();
+
+    // player1 يبدأ من اليسار (عندما crossfade = 1.0)
+    // player2 يبدأ من اليمين (عندما crossfade = 0.0)
+    float player1Gain = crossfadeValue;
+    float player2Gain = 1.0f - crossfadeValue;
+
+    playerAudio1.setGain(player1Gain);
+    playerAudio2.setGain(player2Gain);
+
+    // تحديث المخطط إذا لزم الأمر
     repaint();
 }
