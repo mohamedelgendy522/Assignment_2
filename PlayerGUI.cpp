@@ -1,34 +1,34 @@
 #include "PlayerGUI.h"
 
-// هيكل لتخزين بيانات الوسائط (ميتاداتا) للملف الصوتي
+// Structure to store media metadata for the audio file
 struct Metadata {
     juce::String title, artist, album, year, duration;
 };
 
-// دالة لقراءة بيانات الوسائط من ملف صوتي
+// Function to read media metadata from an audio file
 static Metadata readMetadata(const juce::File& file)
 {
     Metadata meta;
 
-    // تهيئة مدير التنسيقات للتعرف على أنواع الملفات الصوتية
+    // Initialize format manager to recognize audio file types
     juce::AudioFormatManager formatManager;
     formatManager.registerBasicFormats();
 
-    // إنشاء قارئ للملف الصوتي
+    // Create a reader for the audio file
     std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
 
     if (reader != nullptr)
     {
-        // قراءة بيانات الوسائط من الملف
+        // Read metadata from the file
         juce::StringPairArray metadata = reader->metadataValues;
 
-        // استخراج البيانات المختلفة مع قيم افتراضية إذا لم تكن موجودة
+        // Extract various data with default values if not present
         meta.title = metadata.getValue("title", file.getFileNameWithoutExtension());
         meta.artist = metadata.getValue("artist", "Unknown Artist");
         meta.album = metadata.getValue("album", "Unknown Album");
         meta.year = metadata.getValue("year", "Unknown Year");
 
-        // حساب مدة الملف الصوتي
+        // Calculate the duration of the audio file
         double seconds = reader->lengthInSamples / reader->sampleRate;
         int totalSeconds = static_cast<int>(seconds);
         int minutes = totalSeconds / 60;
@@ -38,7 +38,7 @@ static Metadata readMetadata(const juce::File& file)
     }
     else
     {
-        // استخدام قيم افتراضية إذا تعذر قراءة الملف
+        // Use default values if the file cannot be read
         meta.title = file.getFileNameWithoutExtension();
         meta.artist = "Unknown Artist";
         meta.album = "Unknown Album";
@@ -46,22 +46,24 @@ static Metadata readMetadata(const juce::File& file)
         meta.duration = "00:00";
     }
 
-    // ضمان وجود عنوان للملف
+    // Ensure there is a title for the file
     if (meta.title.isEmpty())
         meta.title = file.getFileNameWithoutExtension();
 
     return meta;
 }
 
-// ========== دالة البناء لـ PlayerGUI ==========
-// تهيئة واجهة المستخدم لعنصر تشغيل الصوت
+// ========== Constructor for PlayerGUI ==========
+// Initialize the UI for the audio player component
 PlayerGUI::PlayerGUI(PlayerAudio& player)
     : playerAudio(player)
 {
-    // تهيئة مدير تنسيقات الصوت
+    thumbnail.addChangeListener(this); // To notify us when loading is finished
+
+    // Initialize audio format manager
     formatManager.registerBasicFormats();
 
-    // ========== إضافة أزرار التحكم ==========
+    // ========== Add control buttons ==========
     addAndMakeVisible(loadButton);
     loadButton.addListener(this);
 
@@ -95,37 +97,39 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     addAndMakeVisible(backward10Button);
     backward10Button.addListener(this);
 
-    // ========== تهيئة ملصق البيانات الوصفية ==========
+    // ========== Initialize metadata label ==========
     metadataLabel.setColour(juce::Label::textColourId, juce::Colours::white);
-    metadataLabel.setJustificationType(juce::Justification::centred);
-    metadataLabel.setFont(juce::Font("Arial", 32.0f, juce::Font::bold));
+    metadataLabel.setJustificationType(juce::Justification::centredLeft);
+    metadataLabel.setFont(juce::Font("Arial", 16.0f, juce::Font::bold));
     addAndMakeVisible(metadataLabel);
 
-    // ========== تهيئة سلايدر الصوت (Volume) ==========
+    // ========== Initialize Volume slider ==========
     volumeSlider.setRange(0.0, 1.0, 0.01);
+    volumeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     volumeSlider.setValue(0.5);
     volumeSlider.addListener(this);
     addAndMakeVisible(volumeSlider);
 
-    // ========== تهيئة سلايدر السرعة (Speed) ==========
+    // ========== Initialize Speed slider ==========
     speedSlider.setRange(0.1, 1.95, 0.01);
+    speedSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     speedSlider.setValue(1);
     speedSlider.addListener(this);
     addAndMakeVisible(speedSlider);
 
-    // ========== تهيئة سلايدر التقدم (Progress) ==========
+    // ========== Initialize Progress slider ==========
     progressSlider.setRange(0, playerAudio.getLength());
     progressSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     progressSlider.addListener(this);
     addAndMakeVisible(progressSlider);
-    startTimerHz(30); // بدء الموقت لتحديث واجهة المستخدم 30 مرة في الثانية
+    startTimerHz(30); // Start timer to update UI 30 times per second
 
-    // ========== تهيئة ملصق الوقت ==========
+    // ========== Initialize time label ==========
     addAndMakeVisible(timeLabel);
     timeLabel.setJustificationType(juce::Justification::centred);
     timeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
 
-    // ========== تهيئة الملصقات الوصفية للسلايدرات ==========
+    // ========== Initialize description labels for sliders ==========
     addAndMakeVisible(volumeLabel);
     addAndMakeVisible(speedLabel);
     addAndMakeVisible(positionLabel);
@@ -142,96 +146,105 @@ PlayerGUI::PlayerGUI(PlayerAudio& player)
     speedLabel.attachToComponent(&speedSlider, true);
     positionLabel.attachToComponent(&progressSlider, true);
 
-    // ========== تهيئة قائمة التشغيل ==========
+    // ========== Initialize playlist ==========
     addAndMakeVisible(playlistBox);
     playlistBox.setModel(this);
     playlistBox.setRowHeight(25);
 }
 
-// ========== دالة التدمير ==========
+// ========== Destructor ==========
 PlayerGUI::~PlayerGUI() {}
 
-// ========== إعداد تشغيل الصوت ==========
+// ========== Prepare to play audio ==========
 void PlayerGUI::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     playerAudio.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-// ========== الحصول على كتلة الصوت التالية ==========
+// ========== Get next audio block ==========
 void PlayerGUI::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     playerAudio.getNextAudioBlock(bufferToFill);
 }
 
-// ========== تحرير الموارد ==========
+// ========== Release resources ==========
 void PlayerGUI::releaseResources()
 {
     playerAudio.releaseResources();
 }
 
-// ========== دالة إعادة تحديد حجم المكون ==========
+// ========== Resized function ==========
 void PlayerGUI::resized()
 {
-    auto bounds = getLocalBounds().reduced(10);
+    auto area = getLocalBounds().reduced(10);
 
-    // ========== صف الأزرار العلوي ==========
-    auto buttonRow = bounds.removeFromTop(40);
-    int buttonWidth = buttonRow.getWidth() / 14; // قسم على عدد الأزرار تقريباً
+    // --- Header (Buttons) ---
+    auto headerRow = area.removeFromTop(40);
+    loadButton.setBounds(headerRow.removeFromLeft(50).reduced(2));
+    AB_loopButton.setBounds(headerRow.removeFromRight(60).reduced(2));
 
-    addMarkerButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    markersBox.setBounds(buttonRow.removeFromLeft(buttonWidth * 2).reduced(2));
-    loadButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    goToStartButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    backward10Button.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    playPauseButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    forward10Button.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    goToEndButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    restartButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    stopButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    muteButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    repeatButton.setBounds(buttonRow.removeFromLeft(buttonWidth).reduced(2));
-    AB_loopButton.setBounds(buttonRow.reduced(2));
+    int numCenterButtons = 9;
+    int btnWidth = headerRow.getWidth() / numCenterButtons;
 
-    // ========== القائمة الجانبية ==========
-    playlistBox.setBounds(bounds.removeFromLeft(bounds.getWidth() / 3).reduced(5));
+    // Arrange buttons
+    goToStartButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    backward10Button.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    playPauseButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    forward10Button.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    goToEndButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    restartButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    stopButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    repeatButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
+    muteButton.setBounds(headerRow.removeFromLeft(btnWidth).reduced(2));
 
-    // ========== منطقة التحكم ==========
-    auto controlArea = bounds;
+    area.removeFromTop(5);
 
-    // ========== منطقة سلايدر الصوت ==========
-    auto volumeArea = controlArea.removeFromTop(35);
-    volumeLabel.setBounds(volumeArea.removeFromLeft(70).reduced(2));
-    volumeSlider.setBounds(volumeArea.reduced(5));
-    volumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    volumeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    // --- Controls (Sliders) ---
+    auto controlsArea = area.removeFromTop(80);
+    auto leftControls = controlsArea.removeFromLeft(controlsArea.getWidth() / 2).reduced(5, 0);
+    auto rightControls = controlsArea;
 
-    // ========== منطقة سلايدر السرعة ==========
-    auto speedArea = controlArea.removeFromTop(35);
-    speedLabel.setBounds(speedArea.removeFromLeft(70).reduced(2));
-    speedSlider.setBounds(speedArea.reduced(5));
-    speedSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    speedSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    // Volume
+    auto volRow = leftControls.removeFromTop(30);
+    volumeLabel.setBounds(volRow.removeFromLeft(50));
+    volumeSlider.setBounds(volRow);
 
-    // ========== منطقة سلايدر التقدم ==========
-    auto progressArea = controlArea.removeFromTop(35);
-    positionLabel.setBounds(progressArea.removeFromLeft(70).reduced(2));
-    progressSlider.setBounds(progressArea.reduced(5));
-    progressSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-    progressSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    // Speed
+    auto speedRow = leftControls.removeFromTop(30);
+    speedLabel.setBounds(speedRow.removeFromLeft(50));
+    speedSlider.setBounds(speedRow);
 
-    // ========== ملصق الوقت ==========
-    timeLabel.setBounds(controlArea.removeFromTop(20).reduced(2));
+    // Position
+    positionLabel.setBounds(rightControls.removeFromLeft(60));
+    progressSlider.setBounds(rightControls.removeFromTop(30));
+    timeLabel.setBounds(rightControls);
 
-    // ========== ملصق البيانات الوصفية ==========
-    metadataLabel.setBounds(controlArea.reduced(5));
+    area.removeFromTop(5);
+
+    // --- Metadata Area (New Area) ---
+    // Here we place the song title instead of above the waveform
+    metadataLabel.setBounds(area.removeFromTop(25));
+    metadataLabel.setFont(juce::Font(14.0f, juce::Font::bold));
+    metadataLabel.setJustificationType(juce::Justification::centred);
+
+    area.removeFromTop(5);
+
+    // --- Waveform ---
+    // Reserve space for drawing (we will use the same calculation in paint)
+    // removeFromTop here just to reserve space and push the Playlist down
+    area.removeFromTop(70);
+
+    area.removeFromTop(5);
+
+    // --- Playlist ---
+    playlistBox.setBounds(area);
 }
-
-// ========== معالج حدث النقر على الأزرار ==========
+// ========== Button click event handler ==========
 void PlayerGUI::buttonClicked(juce::Button* button)
 {
     if (button == &loadButton)
     {
-        // فتح نافذة اختيار الملفات
+        // Open file chooser window
         juce::FileChooser chooser("Select audio files...",
             juce::File{},
             "*.wav;*.mp3");
@@ -335,11 +348,14 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     }
     else if (button == &repeatButton) {
         isRepeating = !isRepeating;
+
+        // 1. Update playback logic
         playerAudio.setRepeat(isRepeating);
-        if (isRepeating)
-            repeatButton.setButtonText("Repeat: ON");
-        else
-            repeatButton.setButtonText("Repeat: OFF");
+
+        // 2. Update button appearance (this was the missing line)
+        repeatButton.setRepeating(isRepeating);
+
+        // (Note: removed setButtonText lines because we rely on drawing now, not text)
     }
     else if (button == &muteButton) {
         muted = !muted;
@@ -351,7 +367,7 @@ void PlayerGUI::buttonClicked(juce::Button* button)
     }
 }
 
-// ========== تبديل حالة كتم الصوت ==========
+// ========== Toggle mute state ==========
 void PlayerGUI::toggleMute()
 {
     muted = !muted; // flip state
@@ -359,41 +375,63 @@ void PlayerGUI::toggleMute()
     repaint();
 }
 
-// ========== معالج حدث تغيير قيمة السلايدر ==========
+// ========== Slider value change event handler ==========
 void PlayerGUI::sliderValueChanged(juce::Slider* slider)
 {
-    // ========== سلايدر الصوت ==========
+    // ========== Volume Slider ==========
     if (slider == &volumeSlider)
     {
         playerAudio.setGain((float)volumeSlider.getValue());
 
     }
-    // ========== سلايدر السرعة ==========
+    // ========== Speed Slider ==========
     if (slider == &speedSlider)
     {
         playerAudio.setSpeed((float)speedSlider.getValue());
 
     }
-    // ========== سلايدر التقدم ==========
+    // ========== Progress Slider ==========
     if (slider == &progressSlider)
         playerAudio.setPosition((float)progressSlider.getValue());
 
 }
 
-// ========== الحصول على عدد الصفوف في قائمة التشغيل ==========
+// ========== Get number of rows in playlist ==========
 int PlayerGUI::getNumRows() { return playlistFiles.size(); }
 
-// ========== رسم عنصر في قائمة التشغيل ==========
+// ========== Paint playlist item ==========
 void PlayerGUI::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
-    if (rowIsSelected) g.fillAll(juce::Colours::lightblue);
+    if (rowIsSelected)
+    {
+        // Selection color (Cyan) with transparency to avoid being too bright
+        g.fillAll(juce::Colour(0xFF00E5FF).withAlpha(0.2f));
+        g.setColour(juce::Colour(0xFF00E5FF)); // Line on the left to indicate selection
+        g.fillRect(0, 0, 4, height);
+    }
     else
-        g.fillAll(juce::Colours::white);
+    {
+        // Normal background color (same as Container)
+        g.fillAll(juce::Colour(0xFF1E1E1E));
+    }
+
     if (rowNumber >= 0 && rowNumber < playlistFiles.size())
-        g.drawText(playlistFiles[rowNumber].getFileNameWithoutExtension(), 5, 0, width, height, juce::Justification::centredLeft);
+    {
+        // Text color
+        g.setColour(rowIsSelected ? juce::Colour(0xFF00E5FF) : juce::Colours::white);
+        g.setFont(14.0f);
+        // Draw text with padding to avoid sticking to edge
+        g.drawText(playlistFiles[rowNumber].getFileNameWithoutExtension(),
+                   10, 0, width - 10, height,
+                   juce::Justification::centredLeft);
+    }
+
+    // Draw a very light separator line between items
+    g.setColour(juce::Colours::grey.withAlpha(0.2f));
+    g.drawLine(0, height, width, height, 1.0f);
 }
 
-// ========== دالة لتحويل الوقت من ثواني إلى تنسيق MM:SS ==========
+// ========== Function to convert time from seconds to MM:SS format ==========
 static juce::String formatTime(double seconds)
 {
     int mins = (int)(seconds / 60);
@@ -401,7 +439,7 @@ static juce::String formatTime(double seconds)
     return juce::String::formatted("%02d:%02d", mins, secs);
 }
 
-// ========== دالة الموقت للتحديث المستمر للواجهة ==========
+// ========== Timer callback for continuous UI update ==========
 void PlayerGUI::timerCallback()
 {
     double len = playerAudio.getLength();
@@ -414,35 +452,88 @@ void PlayerGUI::timerCallback()
             formatTime((int)pos) + " / " + formatTime((int)len) + " s",
             juce::dontSendNotification
         );
+
+        // Very important: Repaint screen so waveform cursor moves
+        repaint();
     }
 }
 
-// ========== معالج حدث تغيير الصف المحدد في قائمة التشغيل ==========
+// ========== Playlist selected row change event handler ==========
 void PlayerGUI::selectedRowsChanged(int lastRowSelected)
 {
     if (lastRowSelected >= 0 && lastRowSelected < playlistFiles.size())
     {
         juce::File file = playlistFiles[lastRowSelected];
         playerAudio.loadFile(file);
+        thumbnail.setSource(new juce::FileInputSource(file));
 
-        // Read metadata using TagLib
         auto meta = readMetadata(file);
 
-        juce::String info;
-        info += "Title: " + (meta.title.isNotEmpty() ? meta.title : file.getFileNameWithoutExtension()) + "\n";
-        info += "Artist: " + (meta.artist.isNotEmpty() ? meta.artist : "Unknown Artist") + "\n";
-        info += "Album: " + (meta.album.isNotEmpty() ? meta.album : "Unknown Album") + "\n";
-        info += "Year: " + (meta.year.isNotEmpty() ? meta.year : "Unknown Year") + "\n";
-        info += "Duration: " + (meta.duration.isNotEmpty() ? meta.duration : "Unknown Duration");
+        // --- Modification: Display information in one or two lines only ---
+        juce::String title = meta.title.isNotEmpty() ? meta.title : file.getFileNameWithoutExtension();
+        juce::String artist = meta.artist.isNotEmpty() ? meta.artist : "";
+
+        // Display: Title - Artist (Duration)
+        juce::String info = title;
+        if (artist.isNotEmpty()) info += " - " + artist;
+        info += "  (" + meta.duration + ")";
 
         metadataLabel.setText(info, juce::dontSendNotification);
     }
 }
 
-// ========== دالة الرسم الرئيسية ==========
+// ========== Main paint function ==========
 void PlayerGUI::paint(juce::Graphics& g)
 {
-    // juce::Colour(0xff6a3fa0);
-    // juce::Colour(0xff1b082a);
+    // Manually calculate waveform position to be below metadata
+    // (Buttons 40 + gap 5 + Controls 80 + gap 5 + Meta 25 + gap 5) = 160
+    int waveformY = 160;
+    int waveformHeight = 70;
 
+    auto bounds = getLocalBounds().reduced(10);
+    auto waveformArea = bounds;
+    waveformArea.setY(waveformY);
+    waveformArea.setHeight(waveformHeight);
+
+    // Background
+    g.setColour(juce::Colour(0xFF0F0F0F));
+    g.fillRoundedRectangle(waveformArea.toFloat(), 6.0f);
+    g.setColour(juce::Colour(0xFF333333));
+    g.drawRoundedRectangle(waveformArea.toFloat(), 6.0f, 1.5f);
+
+    if (thumbnail.getNumChannels() > 0)
+    {
+        g.setColour(juce::Colour(0xFF00E5FF));
+
+        // Draw channels (Stereo looks good, keep it as is but in wider space)
+        thumbnail.drawChannels(g, waveformArea.reduced(2), 0.0, thumbnail.getTotalLength(), 1.0f);
+
+        // Draw Playhead
+        double progress = playerAudio.getPosition() / playerAudio.getLength();
+        // Ensure progress is within normal bounds
+        if (progress >= 0.0 && progress <= 1.0)
+        {
+            float x = waveformArea.getX() + (float)(waveformArea.getWidth() * progress);
+
+            g.setColour(juce::Colours::white);
+            // Draw vertical line
+            g.drawLine(x, (float)waveformArea.getY(), x, (float)waveformArea.getBottom(), 2.0f);
+
+            // Draw small triangle on top
+            juce::Path p;
+            p.addTriangle(x - 5, (float)waveformArea.getY(), x + 5, (float)waveformArea.getY(), x, (float)waveformArea.getY() + 6);
+            g.fillPath(p);
+        }
+    }
+    else
+    {
+        g.setColour(juce::Colours::grey);
+        g.setFont(16.0f);
+        g.drawText("NO TRACK LOADED", waveformArea, juce::Justification::centred);
+    }
+}
+void PlayerGUI::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &thumbnail)
+        repaint(); // When drawing is ready, repaint screen
 }
