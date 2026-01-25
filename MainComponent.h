@@ -1,6 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PlayerGUI.h"
+#include "StyleSheet.h"
 
 class MainComponent : public juce::AudioAppComponent {
 public:
@@ -11,11 +12,13 @@ public:
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
     void releaseResources() override;
     void resized() override;
+    void paint(juce::Graphics& g) override;
 
 
 
 private:
     void updateMixState();
+    void updateCrossfade();
     bool isMuted = false;
 
     PlayerAudio playerAudio1;
@@ -23,6 +26,8 @@ private:
 
     PlayerGUI player1{ playerAudio1 };
     PlayerGUI player2{ playerAudio2 };
+
+    ModernLookAndFeel modernLook;
 
     // mixer and UI control
     juce::MixerAudioSource mixer;
@@ -32,6 +37,7 @@ private:
     // Crossfade slider
     juce::Slider crossfadeSlider;
     juce::Label crossfadeLabel;
+    juce::Label leftLabel, rightLabel;
 
     //void loadTrack(const juce::File& file);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)

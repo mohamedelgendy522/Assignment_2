@@ -3,19 +3,30 @@
 #include "PlayerAudio.h"
 class IconButton : public juce::TextButton {
 public:
-    enum class Type { Play, Pause, Start, End, Restart, Stop, Mute, Forward10, Backward10 };
+    void setRepeating(bool r) { repeating = r; repaint(); }
+    bool isRepeating() const { return repeating; }
+
+    enum class Type { Play, Pause, Start, End, Restart, Stop, Mute, Forward10, Backward10, Repeat };
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; } // getter
-    void paintButton(juce::Graphics& g, bool isMouseOver, bool
-        isButtonDown) override {
-        auto bounds = getLocalBounds().toFloat();
-        // Background color
-        g.setColour(isButtonDown ? juce::Colours::darkgrey
-            : (isMouseOver ? juce::Colours::grey :
-                juce::Colours::black));
-        g.fillRoundedRectangle(bounds, 8.0f);
+    void paintButton(juce::Graphics& g, bool isMouseOver, bool isButtonDown) override {
+
+        auto bounds = getLocalBounds().toFloat().reduced(6.0f);
+
+        g.setColour(juce::Colours::transparentBlack);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 8.0f);
+
+        // 🔹 Draw light borders only on hover
+        if (isMouseOver) {
+            g.setColour(juce::Colour(0xFF00E5FF)); // Neon color on mouse hover
+        } else {
+            g.setColour(juce::Colours::white.withAlpha(0.9f)); // Soft white color
+        }
+
+        // 🔹 Basic icon drawing
         g.setColour(juce::Colours::white);
+
 
         switch (type)
         {
@@ -234,6 +245,73 @@ public:
             g.fillPath(forward);
             break;
         }
+            case Type::Repeat:
+        {
+            // 1. Dimensions and Centering
+            float iconW = 20.0f;
+            float iconH = 14.0f;
+            float corner = 4.0f;
+            float strokeWidth = 1.5f; // Thin and clean line
+
+            float cx = bounds.getCentreX();
+            float cy = bounds.getCentreY();
+            float x = cx - iconW / 2.0f;
+            float y = cy - iconH / 2.0f;
+
+            g.setColour(repeating ? juce::Colour(0xFF00E5FF) : juce::Colours::white);
+
+            juce::Path p;
+
+            // 2. Drawing "Clockwise"
+            // Start: From bottom-left corner (to ensure this corner exists)
+            p.startNewSubPath(x + corner, y + iconH); // Start from the bottom line towards the left
+
+            // Draw bottom-left corner (BL) and go up
+            p.quadraticTo(x, y + iconH, x, y + iconH - corner);
+
+            // Left side (going up)
+            p.lineTo(x, y + corner);
+
+            // Top-left corner (TL)
+            p.quadraticTo(x, y, x + corner, y);
+
+            // Top side (right)
+            p.lineTo(x + iconW - corner, y);
+
+            // Top-right corner (TR)
+            p.quadraticTo(x + iconW, y, x + iconW, y + corner);
+
+            // Right side (going down)
+            p.lineTo(x + iconW, y + iconH - corner);
+
+            // Bottom-right corner (BR)
+            p.quadraticTo(x + iconW, y + iconH, x + iconW - corner, y + iconH);
+
+            // Bottom side (left) - stop in the middle to leave space for the arrow
+            p.lineTo(x + iconW * 0.45f, y + iconH); // Stop at 45% of the width
+
+            g.strokePath(p, juce::PathStrokeType(strokeWidth));
+
+            // 3. Draw arrow (pointing left, at the end of the line)
+            juce::Path arrow;
+            float tipX = x + iconW * 0.45f; // Where we stopped the line
+            float tipY = y + iconH;
+            float arrowSize = 3.5f;
+
+            // Arrowhead points to the left (towards the gap)
+            arrow.addTriangle(tipX - arrowSize, tipY,             // Tip (left)
+                              tipX + arrowSize * 0.5f, tipY - arrowSize * 0.7f, // Upper wing
+                              tipX + arrowSize * 0.5f, tipY + arrowSize * 0.7f);// Lower wing
+
+            g.fillPath(arrow);
+
+            // 4. Dot (optional)
+            if (repeating)
+            {
+                g.fillEllipse(cx - 1.5f, cy - 1.5f, 3.0f, 3.0f);
+            }
+            break;
+        }
         }
     }
     void setType(Type newType)
@@ -244,12 +322,14 @@ public:
 private:
     Type type;
     bool muted = false;
+    bool repeating = false;
 };
 class PlayerGUI : public juce::Component,
     public juce::Button::Listener,
     public juce::Slider::Listener,
     public juce::Timer,
-    public juce::ListBoxModel
+    public juce::ListBoxModel,
+    public juce::ChangeListener
 {
 public:
     PlayerGUI(PlayerAudio& player);
@@ -264,12 +344,17 @@ public:
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     int getNumRows() override;
     void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
     void selectedRowsChanged(int lastRowSelected) override;
 
+
 private:
+    int buttonHeight = 40;
+    int controlHeight = 100;
+    int playlistHeight = 200;
     bool isRepeating = false;
     bool muted = false;
     bool isPlaying = false;
@@ -288,11 +373,13 @@ private:
     IconButton muteButton{ IconButton::Type::Mute };
     IconButton forward10Button{ IconButton::Type::Forward10 };
     IconButton backward10Button{ IconButton::Type::Backward10 };
-    juce::TextButton repeatButton{ "Repeat" };
+    IconButton repeatButton{ IconButton::Type::Repeat };
     juce::TextButton AB_loopButton{ "AB Loop" };
     juce::Slider volumeSlider;
-    juce::Label metadataLabel;
     juce::Slider speedSlider;
+
+    juce::Label metadataLabel;
+
     juce::Slider progressSlider;
     juce::Label timeLabel, volumeLabel, speedLabel, positionLabel;
 
@@ -302,6 +389,9 @@ private:
 
     juce::ListBox playlistBox;
     juce::Array<juce::File> playlistFiles;
+
+    juce::AudioThumbnailCache thumbnailCache{ 5 }; // Caches the last 5 files for performance
+    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
 
     // Event handlers
     void buttonClicked(juce::Button* button) override;
