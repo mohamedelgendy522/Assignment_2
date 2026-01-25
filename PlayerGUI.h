@@ -10,21 +10,23 @@ public:
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; } // getter
-    void paintButton(juce::Graphics& g, bool isMouseOver, bool
-        isButtonDown) override {
-        auto bounds = getLocalBounds().toFloat();
-        g.setColour(juce::Colours::transparentBlack);
-        g.fillRoundedRectangle(bounds, 8.0f);
+    void paintButton(juce::Graphics& g, bool isMouseOver, bool isButtonDown) override {
 
-        // 🔹 رسم حدود خفيفة فقط عند التحويم
+        auto bounds = getLocalBounds().toFloat().reduced(6.0f);
+
+        g.setColour(juce::Colours::transparentBlack);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 8.0f);
+
+        // 🔹 Draw light borders only on hover
         if (isMouseOver) {
-            g.setColour(juce::Colours::white.withAlpha(0.3f));
-            g.drawRoundedRectangle(bounds.reduced(1.0f), 8.0f, 1.0f);
+            g.setColour(juce::Colour(0xFF00E5FF)); // Neon color on mouse hover
+        } else {
+            g.setColour(juce::Colours::white.withAlpha(0.9f)); // Soft white color
         }
 
-        // 🔹 الرسم الأساسي للأيقونة
+        // 🔹 Basic icon drawing
         g.setColour(juce::Colours::white);
-       
+
 
         switch (type)
         {
@@ -243,46 +245,73 @@ public:
             g.fillPath(forward);
             break;
         }
-        case Type::Repeat:
-        {// شكل تكرار تقليدي - سهم يلتف حول نفسه
-            auto center = bounds.getCentre();
-            float radius = bounds.getWidth() * 0.25f;
+            case Type::Repeat:
+        {
+            // 1. Dimensions and Centering
+            float iconW = 20.0f;
+            float iconH = 14.0f;
+            float corner = 4.0f;
+            float strokeWidth = 1.5f; // Thin and clean line
 
-            // رسم سهم دائري
-            juce::Path repeatPath;
+            float cx = bounds.getCentreX();
+            float cy = bounds.getCentreY();
+            float x = cx - iconW / 2.0f;
+            float y = cy - iconH / 2.0f;
 
-            // جزء من دائرة (3/4 دائرة)
-            repeatPath.addArc(center.x - radius, center.y - radius,
-                             radius * 2, radius * 2,
-                             juce::MathConstants<float>::pi * 0.25f,  // بداية من أعلى اليمين
-                             juce::MathConstants<float>::pi * 1.75f,  // نهاية عند أعلى اليسار
-                             true);
+            g.setColour(repeating ? juce::Colour(0xFF00E5FF) : juce::Colours::white);
 
-            // رأس السهم
-            float arrowSize = radius * 0.3f;
-            juce::Path arrowHead;
-            arrowHead.addTriangle(
-                center.x, center.y - radius - arrowSize,           // نقطة
-                center.x - arrowSize, center.y - radius,           // يسار
-                center.x + arrowSize, center.y - radius            // يمين
-            );
+            juce::Path p;
 
-            // تحديد اللون حسب الحالة
-            if (repeating) {
-                g.setColour(juce::Colours::lightgreen);
-                // إضافة رقم "1" صغير للإشارة إلى التكرار مرة واحدة
-                g.setFont(juce::Font(bounds.getHeight() * 0.3f));
-                g.drawText("1", bounds, juce::Justification::centred);
-            } else {
-                g.setColour(juce::Colours::white);
+            // 2. Drawing "Clockwise"
+            // Start: From bottom-left corner (to ensure this corner exists)
+            p.startNewSubPath(x + corner, y + iconH); // Start from the bottom line towards the left
+
+            // Draw bottom-left corner (BL) and go up
+            p.quadraticTo(x, y + iconH, x, y + iconH - corner);
+
+            // Left side (going up)
+            p.lineTo(x, y + corner);
+
+            // Top-left corner (TL)
+            p.quadraticTo(x, y, x + corner, y);
+
+            // Top side (right)
+            p.lineTo(x + iconW - corner, y);
+
+            // Top-right corner (TR)
+            p.quadraticTo(x + iconW, y, x + iconW, y + corner);
+
+            // Right side (going down)
+            p.lineTo(x + iconW, y + iconH - corner);
+
+            // Bottom-right corner (BR)
+            p.quadraticTo(x + iconW, y + iconH, x + iconW - corner, y + iconH);
+
+            // Bottom side (left) - stop in the middle to leave space for the arrow
+            p.lineTo(x + iconW * 0.45f, y + iconH); // Stop at 45% of the width
+
+            g.strokePath(p, juce::PathStrokeType(strokeWidth));
+
+            // 3. Draw arrow (pointing left, at the end of the line)
+            juce::Path arrow;
+            float tipX = x + iconW * 0.45f; // Where we stopped the line
+            float tipY = y + iconH;
+            float arrowSize = 3.5f;
+
+            // Arrowhead points to the left (towards the gap)
+            arrow.addTriangle(tipX - arrowSize, tipY,             // Tip (left)
+                              tipX + arrowSize * 0.5f, tipY - arrowSize * 0.7f, // Upper wing
+                              tipX + arrowSize * 0.5f, tipY + arrowSize * 0.7f);// Lower wing
+
+            g.fillPath(arrow);
+
+            // 4. Dot (optional)
+            if (repeating)
+            {
+                g.fillEllipse(cx - 1.5f, cy - 1.5f, 3.0f, 3.0f);
             }
-
-            // رسم المسار
-            g.strokePath(repeatPath, juce::PathStrokeType(2.0f));
-            g.fillPath(arrowHead);
-
             break;
-}
+        }
         }
     }
     void setType(Type newType)
@@ -299,7 +328,8 @@ class PlayerGUI : public juce::Component,
     public juce::Button::Listener,
     public juce::Slider::Listener,
     public juce::Timer,
-    public juce::ListBoxModel
+    public juce::ListBoxModel,
+    public juce::ChangeListener
 {
 public:
     PlayerGUI(PlayerAudio& player);
@@ -314,6 +344,7 @@ public:
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
     int getNumRows() override;
     void paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
@@ -358,6 +389,9 @@ private:
 
     juce::ListBox playlistBox;
     juce::Array<juce::File> playlistFiles;
+
+    juce::AudioThumbnailCache thumbnailCache{ 5 }; // Caches the last 5 files for performance
+    juce::AudioThumbnail thumbnail{ 512, formatManager, thumbnailCache };
 
     // Event handlers
     void buttonClicked(juce::Button* button) override;
