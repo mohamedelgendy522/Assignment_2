@@ -1,6 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PlayerGUI.h"
+#include "StyleSheet.h"
 
 class MainComponent : public juce::AudioAppComponent {
 public:
@@ -25,6 +26,8 @@ private:
 
     PlayerGUI player1{ playerAudio1 };
     PlayerGUI player2{ playerAudio2 };
+
+    ModernLookAndFeel modernLook;
 
     // mixer and UI control
     juce::MixerAudioSource mixer;
