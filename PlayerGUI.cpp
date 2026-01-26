@@ -9,46 +9,59 @@ struct Metadata {
 static Metadata readMetadata(const juce::File& file)
 {
     Metadata meta;
-
-    // Initialize format manager to recognize audio file types
     juce::AudioFormatManager formatManager;
     formatManager.registerBasicFormats();
-
-    // Create a reader for the audio file
     std::unique_ptr<juce::AudioFormatReader> reader(formatManager.createReaderFor(file));
 
+    // 1. Try reading from embedded Metadata tags
     if (reader != nullptr)
     {
-        // Read metadata from the file
-        juce::StringPairArray metadata = reader->metadataValues;
+        auto metadata = reader->metadataValues;
 
-        // Extract various data with default values if not present
-        meta.title = metadata.getValue("title", file.getFileNameWithoutExtension());
-        meta.artist = metadata.getValue("artist", "Unknown Artist");
-        meta.album = metadata.getValue("album", "Unknown Album");
-        meta.year = metadata.getValue("year", "Unknown Year");
+        // Try reading Title
+        if (metadata.containsKey("title")) meta.title = metadata["title"];
+        else if (metadata.containsKey("id3:TIT2")) meta.title = metadata["id3:TIT2"];
 
-        // Calculate the duration of the audio file
+        // Try reading Artist
+        if (metadata.containsKey("artist")) meta.artist = metadata["artist"];
+        else if (metadata.containsKey("id3:TPE1")) meta.artist = metadata["id3:TPE1"];
+
+        // Try reading Album
+        if (metadata.containsKey("album")) meta.album = metadata["album"];
+        else if (metadata.containsKey("id3:TALB")) meta.album = metadata["id3:TALB"];
+
+        // Calculate duration
         double seconds = reader->lengthInSamples / reader->sampleRate;
         int totalSeconds = static_cast<int>(seconds);
-        int minutes = totalSeconds / 60;
-        int secs = totalSeconds % 60;
-
-        meta.duration = juce::String::formatted("%02d:%02d", minutes, secs);
+        meta.duration = juce::String::formatted("%02d:%02d", totalSeconds / 60, totalSeconds % 60);
     }
-    else
+
+    // 2. Fallback Strategy: If metadata is missing, parse the filename
+    if (meta.title.isEmpty() || meta.artist.isEmpty())
     {
-        // Use default values if the file cannot be read
-        meta.title = file.getFileNameWithoutExtension();
-        meta.artist = "Unknown Artist";
-        meta.album = "Unknown Album";
-        meta.year = "Unknown Year";
-        meta.duration = "00:00";
+        juce::String fileName = file.getFileNameWithoutExtension();
+
+        // Check if filename contains a separator " - "
+        if (fileName.contains(" - "))
+        {
+            // Assume format: "Artist - Song Title"
+            auto parts = juce::StringArray::fromTokens(fileName, "-", "");
+            if (parts.size() >= 2)
+            {
+                if (meta.artist.isEmpty()) meta.artist = parts[0].trim();
+                if (meta.title.isEmpty())  meta.title = parts[1].trim();
+            }
+        }
+        else
+        {
+            // If no separator, treat the entire filename as the Title
+            if (meta.title.isEmpty()) meta.title = fileName;
+            if (meta.artist.isEmpty()) meta.artist = "Unknown Artist";
+        }
     }
 
-    // Ensure there is a title for the file
-    if (meta.title.isEmpty())
-        meta.title = file.getFileNameWithoutExtension();
+    // Final cleanup to ensure non-empty duration
+    if (meta.duration.isEmpty()) meta.duration = "00:00";
 
     return meta;
 }
@@ -282,12 +295,14 @@ void PlayerGUI::buttonClicked(juce::Button* button)
             playerAudio.pause();
             isPlaying = false;
             playPauseButton.setType(IconButton::Type::Play);
+            isActive = false;
         }
         else
         {
             playerAudio.play();
             isPlaying = true;
             playPauseButton.setType(IconButton::Type::Pause);
+            isActive = true;
         }
     }
 
@@ -482,9 +497,29 @@ void PlayerGUI::selectedRowsChanged(int lastRowSelected)
     }
 }
 
+
 // ========== Main paint function ==========
 void PlayerGUI::paint(juce::Graphics& g)
 {
+
+    if (isActive)
+    {
+        float cornerSize = 15.0f;
+        auto bounds = getLocalBounds().toFloat();
+
+        // Layer 1: Outer glow
+        g.setColour(juce::Colour(0xFF00E5FF).withAlpha(0.15f));
+        g.drawRoundedRectangle(bounds.reduced(1.0f), cornerSize, 12.0f);
+
+        // Layer 2: Medium glow
+        g.setColour(juce::Colour(0xFF00E5FF).withAlpha(0.4f));
+        g.drawRoundedRectangle(bounds.reduced(1.0f), cornerSize, 5.0f);
+
+        // Layer 3: Main line
+        g.setColour(juce::Colour(0xFF00E5FF));
+        g.drawRoundedRectangle(bounds.reduced(1.0f), cornerSize, 1.5f);
+    }
+
     // Manually calculate waveform position to be below metadata
     // (Buttons 40 + gap 5 + Controls 80 + gap 5 + Meta 25 + gap 5) = 160
     int waveformY = 160;
