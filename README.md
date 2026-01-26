@@ -1,27 +1,23 @@
-Faculty of Computing and AI Cairo University (FCAI-CU)
+# 🖥️ CS213 - Object Oriented Programming Assignment #2
 
-CS213 - Object Oriented Programming Assignment #2
+📚 **Course:** Object Oriented Programming (CS213 – Faculty of Computing and AI, Cairo University)  
+👨‍🏫 **Instructor:** Dr. Mohamed El-Ramly
 
-Course Instructor: Dr. Mohamed El-Ramly
+## ℹ️ About the Project
 
--TEAM DETAILS:
+This project is **Assignment 2** for the CS213 course.  
+It’s written in **C++** and demonstrates object-oriented programming concepts through a multimedia player application that includes features such as audio playback, a graphical user interface, and additional bonus functionality.
 
-Ahmed Mansour Khalaf (20240055) (S3)
+## 👨‍💻 Team Members & Work Division
 
-Mohamed Mahmoud Ahmed (20250915) (Transfer Student)
+| Name | Student ID | Tasks |
+|------|------------|-------|
+| Ahmed Mansour Khalaf | 20240055 | Features 2,5,8 |
+| Mohamed Mahmoud Ahmed | 20250915 | Features 4,7,10 + Bonus Features 13,14 |
+| Ahmed Bakr Abdel-Hafez | 20250907 | Features 3,6,9 + Crossfade (Bonus) |
 
-Ahmed Bakr Abdel-Hafez (20250907) (Transfer Student)
+## 📦 Project Structure
 
--WORK DIVISION:
+The core source files include:
 
-Ahmed Mansour Khalaf (20240055): Feature 2+5+8
 
-Mohamed Mahmoud Ahmed (20250915): Feature 4+7+10
-
-Ahmed Bakr Abdel-Hafez (20250907): Feature 3+6+9
-
--Bonus Features:
-
-Mohamed Mahmoud Ahmed (20250915): Feature 13+14
-
-Ahmed Bakr Abdel-Hafez (20250907): Feature 12 + Task 4 (Including new innovative feature "Crossfade")
