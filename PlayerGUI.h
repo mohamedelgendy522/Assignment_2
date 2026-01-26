@@ -1,6 +1,7 @@
 #pragma once
 #include <JuceHeader.h>
 #include "PlayerAudio.h"
+
 class IconButton : public juce::TextButton {
 public:
     void setRepeating(bool r) { repeating = r; repaint(); }
@@ -10,6 +11,7 @@ public:
     IconButton(Type t) : type(t) {}
     void setMuted(bool m) { muted = m; repaint(); } // setter
     bool isMuted() const { return muted; } // getter
+
     void paintButton(juce::Graphics& g, bool isMouseOver, bool isButtonDown) override {
 
         auto bounds = getLocalBounds().toFloat().reduced(6.0f);
@@ -27,15 +29,13 @@ public:
         // 🔹 Basic icon drawing
         g.setColour(juce::Colours::white);
 
-
         switch (type)
         {
         case Type::Play:
         {
             // ► triangle
             juce::Path playIcon;
-            playIcon.addTriangle(bounds.getX() + bounds.getWidth() *
-                0.35f,
+            playIcon.addTriangle(bounds.getX() + bounds.getWidth() * 0.35f,
                 bounds.getY() + bounds.getHeight() * 0.25f,
                 bounds.getX() + bounds.getWidth() * 0.35f,
                 bounds.getY() + bounds.getHeight() * 0.75f,
@@ -51,10 +51,8 @@ public:
             float gap = barWidth;
             float height = bounds.getHeight() * 0.5f;
             float top = bounds.getCentreY() - height / 2.0f;
-            g.fillRect(bounds.getCentreX() - gap / 2 - barWidth, top,
-                barWidth, height);
-            g.fillRect(bounds.getCentreX() + gap / 2, top, barWidth,
-                height);
+            g.fillRect(bounds.getCentreX() - gap / 2 - barWidth, top, barWidth, height);
+            g.fillRect(bounds.getCentreX() + gap / 2, top, barWidth, height);
             break;
         }
         case Type::Start:
@@ -108,37 +106,53 @@ public:
         }
         case Type::Restart:
         {
-            juce::Path restartIcon;
-            auto center = bounds.getCentre();
-            float radius = bounds.getWidth() * 0.25f;
-            float thickness = bounds.getWidth() * 0.05f;
-            // ⟳ shape
-            float startAngle = juce::MathConstants<float>::pi * 0.7f;
-            float endAngle = juce::MathConstants<float>::twoPi * 1.1f;
-            restartIcon.addCentredArc(center.x, center.y, radius, radius,
-                0.0f, startAngle, endAngle, true);
-            // arrowhead
-            float arrowAngle = endAngle +
-                juce::MathConstants<float>::twoPi * 0.75f;
-            float arrowLength = radius * 0.8f;
-            float arrowWidth = radius * 0.5f;
-            juce::Point<float> arrowTip(
-                center.x + std::cos(arrowAngle) * (radius + 7.5),
-                center.y + std::sin(arrowAngle) * (radius + 7.5));
+            // 1. Fixed dimensions (to ensure clarity regardless of button size)
+            float r = 7.0f;           // Radius (Diameter 14px - small and suitable)
+            float strokeWidth = 1.5f; // Line thickness (thin like Repeat)
+
+            // Centering
+            float cx = bounds.getCentreX();
+            float cy = bounds.getCentreY();
+
+            g.setColour(juce::Colours::white);
+
+            juce::Path p;
+
+            // 2. Draw Arc (open at the top)
+            // Angle 0 is 12 o'clock
+            // Start from 1 o'clock (0.2pi) to 11 o'clock (1.8pi)
+            p.addCentredArc(cx, cy, r, r, 0.0f,
+                0.2f * juce::MathConstants<float>::pi,
+                1.8f * juce::MathConstants<float>::pi,
+                true); // true = Clockwise (to draw the circle from the bottom)
+
+            g.strokePath(p, juce::PathStrokeType(strokeWidth));
+
+            // 3. Draw Arrow (small and simple)
+            // Arrow is at the start of the arc (1 o'clock) pointing backwards (North-West)
             juce::Path arrow;
-            arrow.addTriangle(
-                arrowTip.x,
-                arrowTip.y,
-                arrowTip.x - std::cos(arrowAngle - 0.5f) * arrowLength -
-                std::sin(arrowAngle - 0.5f) * arrowWidth,
-                arrowTip.y - std::sin(arrowAngle - 0.5f) * arrowLength +
-                std::cos(arrowAngle - 0.5f) * arrowWidth,
-                arrowTip.x - std::cos(arrowAngle + 0.5f) * arrowLength -
-                std::sin(arrowAngle + 0.5f) * arrowWidth,
-                arrowTip.y - std::sin(arrowAngle + 0.5f) * arrowLength +
-                std::cos(arrowAngle + 0.5f) * arrowWidth);
-            g.strokePath(restartIcon, juce::PathStrokeType(thickness));
+            float arrowSize = 3.5f; // Small arrow size
+
+            // Calculate arrow tip position accurately
+            // (Same position as arc start)
+            float angle = 0.2f * juce::MathConstants<float>::pi;
+            float tipX = cx + r * std::sin(angle);
+            float tipY = cy - r * std::cos(angle);
+
+            // Draw Triangle (pointing North-West)
+            // Simple approximate coordinates instead of complex calculations
+            arrow.addTriangle(tipX, tipY,                     // Tip
+                tipX + 1.0f, tipY + arrowSize * 1.5f, // Right leg
+                tipX - arrowSize * 1.5f, tipY + 2.0f);// Left leg
+
+            // Simple rotation for the arrow to align with circle curvature
+            arrow.applyTransform(juce::AffineTransform::rotation(-0.2f, tipX, tipY));
+
             g.fillPath(arrow);
+
+            // 4. Center dot (adds aesthetic touch)
+            g.fillEllipse(cx - 1.5f, cy - 1.5f, 3.0f, 3.0f);
+
             break;
         }
         case Type::Mute: {
@@ -245,7 +259,7 @@ public:
             g.fillPath(forward);
             break;
         }
-            case Type::Repeat:
+        case Type::Repeat:
         {
             // 1. Dimensions and Centering
             float iconW = 20.0f;
@@ -300,8 +314,8 @@ public:
 
             // Arrowhead points to the left (towards the gap)
             arrow.addTriangle(tipX - arrowSize, tipY,             // Tip (left)
-                              tipX + arrowSize * 0.5f, tipY - arrowSize * 0.7f, // Upper wing
-                              tipX + arrowSize * 0.5f, tipY + arrowSize * 0.7f);// Lower wing
+                tipX + arrowSize * 0.5f, tipY - arrowSize * 0.7f, // Upper wing
+                tipX + arrowSize * 0.5f, tipY + arrowSize * 0.7f);// Lower wing
 
             g.fillPath(arrow);
 
@@ -324,6 +338,7 @@ private:
     bool muted = false;
     bool repeating = false;
 };
+
 class PlayerGUI : public juce::Component,
     public juce::Button::Listener,
     public juce::Slider::Listener,
@@ -358,6 +373,7 @@ private:
     bool isRepeating = false;
     bool muted = false;
     bool isPlaying = false;
+    bool isActive = false ;
     int State = 0;
     void toggleMute();
     void timerCallback() override;
