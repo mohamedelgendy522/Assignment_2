@@ -1,23 +1,74 @@
-# 🖥️ CS213 - Object Oriented Programming Assignment #2
+# 🎵 Multimedia Player – CS213 Assignment 2
 
-📚 **Course:** Object Oriented Programming (CS213 – Faculty of Computing and AI, Cairo University)  
-👨‍🏫 **Instructor:** Dr. Mohamed El-Ramly
+📚 **Course:** Object Oriented Programming (CS213)  
+🏫 **Faculty:** Faculty of Computing and Artificial Intelligence – Cairo University  
+👨‍🏫 **Instructor:** Dr. Mohamed El-Ramly  
 
-## ℹ️ About the Project
+---
 
-This project is **Assignment 2** for the CS213 course.  
-It’s written in **C++** and demonstrates object-oriented programming concepts through a multimedia player application that includes features such as audio playback, a graphical user interface, and additional bonus functionality.
+## 📌 Project Overview
 
-## 👨‍💻 Team Members & Work Division
+This project is a **Multimedia Player Application** developed as part of **Assignment 2** for the CS213 (Object Oriented Programming) course.
 
-| Name | Student ID | Tasks |
-|------|------------|-------|
-| Ahmed Mansour Khalaf | 20240055 | Features 2,5,8 |
-| Mohamed Mahmoud Ahmed | 20250915 | Features 4,7,10 + Bonus Features 13,14 |
-| Ahmed Bakr Abdel-Hafez | 20250907 | Features 3,6,9 + Crossfade (Bonus) |
+The main goal of this assignment is to apply **Object-Oriented Programming principles** in a real-world style application that combines **audio playback**, **graphical user interface (GUI)**, and **modular design**.
 
-## 📦 Project Structure
+The project is fully implemented in **C++** and focuses on clean architecture, separation of responsibilities, and extensibility.
 
-The core source files include:
+---
+
+## 🎯 Objectives
+
+- Apply core **OOP concepts** (encapsulation, abstraction, modularity)
+- Design a structured multimedia application
+- Handle audio playback and user interaction
+- Build a simple but functional GUI
+- Implement additional **bonus features** to enhance user experience
+
+---
+
+## 🧩 Project Structure
+
+The project is divided into multiple components, each responsible for a specific role:
 
 
+### 📂 Components Description
+
+- **MainComponent**  
+  Controls the overall application flow and integrates all modules.
+
+- **PlayerGUI**  
+  Handles all graphical user interface elements and user interactions.
+
+- **PlayerAudio**  
+  Responsible for audio processing, playback control, and sound features.
+
+- **StyleSheet**  
+  Contains UI styling and visual customization.
+
+---
+
+## ✨ Features
+
+- ▶️ Audio playback (play / pause / stop)
+- 🎚️ Audio controls (volume, progress, navigation)
+- 🖥️ Graphical user interface
+- 🧱 Modular and object-oriented design
+- ⭐ Bonus features (e.g. Crossfade support and advanced controls)
+
+---
+
+## 🛠 Technologies Used
+
+- **C++**
+- Object-Oriented Programming (OOP)
+- GUI and Audio handling libraries (as provided/required by the course)
+
+---
+
+## 🚀 How to Build & Run
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/mohamedelgendy522/Assignment_2.git
+cd Assignment_2
